@@ -41,6 +41,10 @@
 using namespace KDevelop;
 
 
+/* Todo: Need to make an isValidDirectory and use that in contextMenuExtension
+ * 			isVersionControlled should be extended with some p4 fstat functionality to answer yes or no to a given file 
+ * 			Implement diff to make commit work */
+
 K_PLUGIN_FACTORY (KdevPerforceFactory, registerPlugin<perforceplugin>();)
 K_EXPORT_PLUGIN (KdevPerforceFactory (KAboutData ("kdevperforce","kdevperforce", ki18n ("Support for Perforce Version Control System"), "0.1", ki18n ("Support for Perforce Version Control System"), KAboutData::License_GPL)))
 
@@ -104,7 +108,7 @@ KDevelop::VcsJob* perforceplugin::add(const KUrl::List& localLocations, KDevelop
   /// Where should the job be run from?
   QDir curDir(localLocations.front().toLocalFile());
   DVcsJob* job = new DVcsJob(curDir, this, KDevelop::OutputJob::Verbose);
-  /// Im' pretty sure sanity checking is needed here.
+  /// I'm pretty sure sanity checking is needed here.
   *job << "p4" << "add" << localLocations;
   
   return job;
@@ -125,9 +129,22 @@ KDevelop::VcsJob* perforceplugin::move(const KUrl& /*localLocationSrc*/, const K
   return 0;
 }
 
-KDevelop::VcsJob* perforceplugin::status(const KUrl::List& /*localLocations*/, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
+KDevelop::VcsJob* perforceplugin::status(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode recursion)
 {
-  return 0;
+    if (localLocations.count() != 1) 
+    {
+        KMessageBox::error(0, i18n("Please select only one item for this operation"));
+        return 0; 
+    }
+
+    QFileInfo curFile(localLocations.front().toLocalFile());
+   
+    DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
+    setEnvironmentForJob(job, curFile);
+    *job << "p4" << "fstat" << curFile.fileName();
+    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4StatusOutput(KDevelop::DVcsJob*)));
+
+    return job;
 }
 
 KDevelop::VcsJob* perforceplugin::revert(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
@@ -287,14 +304,38 @@ void perforceplugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile
 {
     KProcess* jobproc = job->process();
     QStringList beforeEnv = jobproc->environment();
-    kDebug() << "Before setting the environment : " << beforeEnv;
+    //kDebug() << "Before setting the environment : " << beforeEnv;
     jobproc->setEnv("P4CONFIG", m_perforceConfigName);
     jobproc->setEnv("PWD", curFile.absolutePath());
     QStringList afterEnv = jobproc->environment();  
-    kDebug() << "After setting the environment : " << afterEnv;   
+    //kDebug() << "After setting the environment : " << afterEnv;   
 }
 
-
+void perforceplugin::parseP4StatusOutput(DVcsJob* job)
+{
+    QStringList outputLines = job->output().split('\n', QString::SkipEmptyParts);
+    KUrl fileUrl = job->directory().absolutePath();
+    QVariantList statuses;
+    QList<KUrl> processedFiles;
+    
+    
+    foreach(const QString& line, outputLines) 
+    {
+	int idx(line.indexOf("no such file(s)"));
+	if(idx != -1)
+	{
+	    QString curr = line.left(line.size()-idx-15);
+	    fileUrl.addPath(curr);
+            VcsStatusInfo status;
+            status.setUrl(fileUrl);
+            status.setState(VcsStatusInfo::ItemUnknown);
+            
+            statuses.append(qVariantFromValue<VcsStatusInfo>(status));
+	}
+        //kDebug() << "Checking perforce status for " << line << curr << messageToState(state);
+    }
+    job->setResults(statuses);
+}
 
 
 

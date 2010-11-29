@@ -12,11 +12,12 @@
 #define KDEVPERFORCEPLUGIN_H
 
 #include <vcs/interfaces/icentralizedversioncontrol.h>
+#include <vcs/vcsstatusinfo.h>
 #include <interfaces/iplugin.h>
 
 #include <QVariantList>
-#include <kaction.h>
 
+#include <kaction.h>
 #include <KMimeType>
 #include <auto_ptr.h>
 
@@ -126,7 +127,10 @@ public Q_SLOTS:
 //   void ctxLocalRevision();
 //   void ctxImport();
 
+private slots:
+   void parseP4StatusOutput(KDevelop::DVcsJob* job);
 
+  
 private:
     bool pathHasConfigFile(const KUrl & dirPath);
     void setEnvironmentForJob(KDevelop::DVcsJob* job, QFileInfo const& fsObject);
