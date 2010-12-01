@@ -41,7 +41,7 @@
 using namespace KDevelop;
 
 
-/* Todo: Need to make an isValidDirectory and use that in contextMenuExtension
+/* Todo: 
  * 			isVersionControlled should be extended with some p4 fstat functionality to answer yes or no to a given file 
  * 			Implement diff to make commit work */
 
@@ -81,11 +81,10 @@ KDevelop::VcsImportMetadataWidget* perforceplugin::createImportMetadataWidget(QW
   return 0;
 }
 
-
-bool perforceplugin::isVersionControlled(const KUrl& localLocation)
+bool perforceplugin::isValidDirectory(const KUrl & dirPath)
 {
-    const QFileInfo finfo(localLocation.toLocalFile());
-    QDir dir = finfo.isDir() ? QDir(localLocation.toLocalFile()) : finfo.absoluteDir();
+    const QFileInfo finfo(dirPath.toLocalFile());
+    QDir dir = finfo.isDir() ? QDir(dirPath.toLocalFile()) : finfo.absoluteDir();
 
     do 
     {
@@ -98,6 +97,37 @@ bool perforceplugin::isVersionControlled(const KUrl& localLocation)
     return false;
 }
 
+bool perforceplugin::isVersionControlled(const KUrl& localLocation)
+{
+    QFileInfo fsObject(localLocation.toLocalFile());
+    if (fsObject.isDir()) 
+    {
+        return isValidDirectory(localLocation);
+    }
+    return parseP4fstat(fsObject, KDevelop::OutputJob::Silent);
+}
+
+DVcsJob* perforceplugin::p4fstatJob(const QFileInfo& curFile, OutputJob::OutputJobVerbosity verbosity)
+{
+    DVcsJob* job = new DVcsJob(curFile.absolutePath(), this, verbosity);
+    setEnvironmentForJob(job, curFile);
+    *job << "p4" << "fstat" << curFile.fileName();
+    return job;
+}
+
+bool perforceplugin::parseP4fstat(const QFileInfo& curFile, OutputJob::OutputJobVerbosity verbosity)
+{
+    QScopedPointer<DVcsJob> job(p4fstatJob(curFile, verbosity));
+    if (job->exec() && job->status() == KDevelop::VcsJob::JobSucceeded)
+    {
+      kDebug() << "Perforce returned: " << job->output();
+      if(!job->output().isEmpty())
+	return true;
+    }
+    return false;
+}
+
+
 KDevelop::VcsJob* perforceplugin::repositoryLocation(const KUrl& /*localLocation*/)
 {
   return 0;
@@ -105,10 +135,9 @@ KDevelop::VcsJob* perforceplugin::repositoryLocation(const KUrl& /*localLocation
 
 KDevelop::VcsJob* perforceplugin::add(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
-  /// Where should the job be run from?
-  QDir curDir(localLocations.front().toLocalFile());
-  DVcsJob* job = new DVcsJob(curDir, this, KDevelop::OutputJob::Verbose);
-  /// I'm pretty sure sanity checking is needed here.
+  QFileInfo curFile(localLocations.front().toLocalFile());
+  DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
+  setEnvironmentForJob(job, curFile);
   *job << "p4" << "add" << localLocations;
   
   return job;
@@ -258,7 +287,7 @@ KDevelop::ContextMenuExtension perforceplugin::contextMenuExtension(KDevelop::Co
     bool hasVersionControlledEntries = false;
     foreach(KUrl const& url, ctxUrlList) 
     {
-        if (isVersionControlled(url)) 
+        if (isValidDirectory(url)) 
         {
             hasVersionControlledEntries = true;
             break;

@@ -14,6 +14,8 @@
 #include <vcs/interfaces/icentralizedversioncontrol.h>
 #include <vcs/vcsstatusinfo.h>
 #include <interfaces/iplugin.h>
+#include <outputview/outputjob.h>
+
 
 #include <QVariantList>
 
@@ -23,6 +25,7 @@
 
 class QMenu;
 class QFileInfo;
+class QDir;
 
 
 namespace KDevelop
@@ -132,7 +135,14 @@ private slots:
 
   
 private:
-    bool pathHasConfigFile(const KUrl & dirPath);
+    bool isValidDirectory(const KUrl & dirPath);
+    KDevelop::DVcsJob* p4fstatJob(const QFileInfo& curFile,
+                            KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
+
+    bool parseP4fstat(const QFileInfo& curFile, 
+		      KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
+
+
     void setEnvironmentForJob(KDevelop::DVcsJob* job, QFileInfo const& fsObject);
   
     std::auto_ptr<KDevelop::VcsPluginHelper> m_common;
