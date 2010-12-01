@@ -42,7 +42,7 @@ using namespace KDevelop;
 
 
 /* Todo: 
- * 			isVersionControlled should be extended with some p4 fstat functionality to answer yes or no to a given file 
+ * 			
  * 			Implement diff to make commit work */
 
 K_PLUGIN_FACTORY (KdevPerforceFactory, registerPlugin<perforceplugin>();)
