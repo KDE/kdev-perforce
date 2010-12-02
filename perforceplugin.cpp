@@ -207,6 +207,10 @@ KDevelop::VcsJob* perforceplugin::update(const KUrl::List& localLocations, const
 
 KDevelop::VcsJob* perforceplugin::commit(const QString& message, const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode recursion)
 {
+  if (localLocations.empty() || message.isEmpty())
+     return errorsFound(i18n("No files or message specified"));
+
+  
   QFileInfo curFile(localLocations.front().toLocalFile());
    
   DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
@@ -216,9 +220,16 @@ KDevelop::VcsJob* perforceplugin::commit(const QString& message, const KUrl::Lis
   return job;
 }
 
-KDevelop::VcsJob* perforceplugin::diff(const KUrl& /*fileOrDirectory*/, const KDevelop::VcsRevision& /*srcRevision*/, const KDevelop::VcsRevision& /*dstRevision*/, KDevelop::VcsDiff::Type , KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
+KDevelop::VcsJob* perforceplugin::diff(const KUrl& fileOrDirectory, const KDevelop::VcsRevision& /*srcRevision*/, const KDevelop::VcsRevision& /*dstRevision*/, KDevelop::VcsDiff::Type , KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
-    return 0;
+    QFileInfo curFile(fileOrDirectory.toLocalFile());
+   
+    DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
+    setEnvironmentForJob(job, curFile);
+    *job << "p4" << "diff" << "-du" << curFile.fileName();
+
+    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4DiffOutput(KDevelop::DVcsJob*)));
+    return job;
 }
 
 KDevelop::VcsJob* perforceplugin::log(const KUrl& /*localLocation*/, const KDevelop::VcsRevision& /*rev*/, long unsigned int /*limit*/)
@@ -366,6 +377,33 @@ void perforceplugin::parseP4StatusOutput(DVcsJob* job)
     job->setResults(statuses);
 }
 
+void perforceplugin::parseP4DiffOutput(DVcsJob* job)
+{
+    VcsDiff diff;
+    diff.setDiff(job->output());
+    
+    QDir dir(job->directory());
+
+    do 
+    {
+      if(dir.exists(m_perforceConfigName))
+      {
+          break;
+      }
+    } 
+    while (dir.cdUp()); 
+
+    diff.setBaseDiff(KUrl(dir.absolutePath()));
+    
+    job->setResults(qVariantFromValue(diff));
+}
+
+KDevelop::VcsJob* perforceplugin::errorsFound(const QString& error, KDevelop::OutputJob::OutputJobVerbosity verbosity)
+{
+    DVcsJob* j = new DVcsJob(QDir::temp(), this, verbosity);
+    *j << "echo" << i18n("error: %1", error) << "-n";
+    return j;
+}
 
 
 

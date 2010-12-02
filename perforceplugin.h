@@ -132,6 +132,7 @@ public Q_SLOTS:
 
 private slots:
    void parseP4StatusOutput(KDevelop::DVcsJob* job);
+   void parseP4DiffOutput(KDevelop::DVcsJob* job);
 
   
 private:
@@ -142,6 +143,7 @@ private:
     bool parseP4fstat(const QFileInfo& curFile, 
 		      KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
 
+    KDevelop::VcsJob* errorsFound(const QString& error, KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
 
     void setEnvironmentForJob(KDevelop::DVcsJob* job, QFileInfo const& fsObject);
   
