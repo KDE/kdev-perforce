@@ -42,7 +42,8 @@ using namespace KDevelop;
 
 namespace
 {
-const QString ACTION_STR("... action ");
+  const QString ACTION_STR("... action ");
+  const QString CLIENT_FILE_STR("... clientFile ");
 }
 
 /* Todo:
@@ -358,13 +359,12 @@ void perforceplugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile
 void perforceplugin::parseP4StatusOutput(DVcsJob* job)
 {
     QStringList outputLines = job->output().split('\n', QString::SkipEmptyParts);
-    KUrl fileUrl = job->directory().absolutePath();
+    //KUrl fileUrl = job->directory().absolutePath();
     QVariantList statuses;
     QList<KUrl> processedFiles;
 
 
     VcsStatusInfo status;
-    status.setUrl(fileUrl);
     status.setState(VcsStatusInfo::ItemUserState);
     foreach(const QString& line, outputLines)
     {
@@ -386,7 +386,15 @@ void perforceplugin::parseP4StatusOutput(DVcsJob* job)
             {
                 status.setState(VcsStatusInfo::ItemUserState);
             }
+            continue;
         }
+        idx = line.indexOf(CLIENT_FILE_STR);
+        if (idx != -1)
+        {
+            KUrl fileUrl = line.right(line.size() - CLIENT_FILE_STR.size());
+            kDebug() << "PARSED URL FROM P4 FSTAT JOB " << fileUrl.url();
+	    status.setUrl(fileUrl);
+	}	
     }
     statuses.append(qVariantFromValue<VcsStatusInfo>(status));
     job->setResults(statuses);
