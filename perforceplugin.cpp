@@ -254,25 +254,87 @@ KDevelop::VcsJob* perforceplugin::commit(const QString& message, const KUrl::Lis
 KDevelop::VcsJob* perforceplugin::diff(const KUrl& fileOrDirectory, const KDevelop::VcsRevision& srcRevision, const KDevelop::VcsRevision& dstRevision, KDevelop::VcsDiff::Type , KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     QFileInfo curFile(fileOrDirectory.toLocalFile());
-    QString depotCurFileName = getRepositoryName(curFile);
-    switch(srcRevision.revisionValue().value<VcsRevision::RevisionSpecialType>()) 
+    QString depotSrcFileName = getRepositoryName(curFile);
+    QString depotDstFileName = depotSrcFileName;
+    switch(srcRevision.revisionType())
     {
-	case VcsRevision::Head:
-	    depotCurFileName.append("#head");
+	case VcsRevision::Special:
+	    switch(srcRevision.revisionValue().value<VcsRevision::RevisionSpecialType>()) 
+	    {
+		case VcsRevision::Head:
+		    depotSrcFileName.append("#head");
+		    break;
+		case VcsRevision::Base:
+		    depotSrcFileName.append("#have");
+		    break;
+		case VcsRevision::Previous:
+		    {
+			kDebug() << "########### Called with a Previous";
+			bool *ok(new bool());
+			int previous = dstRevision.prettyValue().toInt(ok);
+			previous--;
+			QString tmp;
+			tmp.setNum(previous);
+			depotSrcFileName.append("#");
+			depotSrcFileName.append(tmp);
+		    }
+		    break;
+		case VcsRevision::Working:
+		case VcsRevision::Start:
+		case VcsRevision::UserSpecialType:
+		    break;
+	    }
 	    break;
-	case VcsRevision::Base:
-	    depotCurFileName.append("#have");
+	case VcsRevision::FileNumber:
+	case VcsRevision::GlobalNumber:
+	    depotSrcFileName.append("#");
+	    depotSrcFileName.append(srcRevision.prettyValue());
+	    kDebug() << "########### Called with a global number ";
 	    break;
-/*	default:
-	    Q_ASSERT(false && "Not implemented");*/
+	case VcsRevision::Date:
+	    kDebug() << "########### Called with a global date";
+	    break;
+	case VcsRevision::Invalid:
+	    kDebug() << "########### Called with a invalid";
+	    break;
+	case VcsRevision::UserSpecialType:
+	    kDebug() << "########### Called with a UserSpecialType";
+	    break;
+	    
     }
-
-     kDebug() << "########### srcRevision Is: " << srcRevision.prettyValue();
-     kDebug() << "########### dstRevision Is: " << dstRevision.prettyValue();
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << "p4" << "diff" << "-du" << depotCurFileName;
+    switch(dstRevision.revisionType())
+    {
+	case VcsRevision::FileNumber:
+	case VcsRevision::GlobalNumber:
+	    depotDstFileName.append("#");
+	    depotDstFileName.append(dstRevision.prettyValue());
+	    *job << "p4" << "diff2" << "-u" << depotSrcFileName << depotDstFileName;
+	    break;
+	case VcsRevision::Special:
+	    switch(dstRevision.revisionValue().value<VcsRevision::RevisionSpecialType>()) 
+	    {
+		case VcsRevision::Working:
+		    *job << "p4" << "diff" << "-du" << depotSrcFileName;
+		    break;
+		case VcsRevision::Start:
+		    kDebug() << "########### dstRevision special type is start";
+		    break;
+		case VcsRevision::UserSpecialType:
+		    kDebug() << "########### dstRevision special type is user special type";
+		    break;
+		    
+		default:
+		    break;
+	    }
+	default:
+	    break;
+    }
+    kDebug() << "########### srcRevision Is: " << srcRevision.prettyValue();
+    kDebug() << "########### dstRevision Is: " << dstRevision.prettyValue();
+
 
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4DiffOutput(KDevelop::DVcsJob*)));
     return job;
@@ -478,10 +540,13 @@ void perforceplugin::parseP4LogOutput(KDevelop::DVcsJob* job)
 	    }
 	    // expecting the Logentry line to be of the form:
 	    //... #5 change 10 edit on 2010/12/06 12:07:31 by mvo@testbed (text)
-	    QString changeNumber(line.section(' ', 3, 3 ));
+	    //QString changeNumber(line.section(' ', 3, 3 ));
+	    QString localChangeNumber(line.section(' ', 1, 1 ));
+	    localChangeNumber.remove(0, 1); // Remove the # from the local revision number
+	    
 	    QString author(line.section(' ', 9, 9 ));
 	    VcsRevision rev;
-	    rev.setRevisionValue(changeNumber, KDevelop::VcsRevision::GlobalNumber);
+	    rev.setRevisionValue(localChangeNumber, KDevelop::VcsRevision::FileNumber);
 	    item.setRevision(rev);
 	    item.setAuthor(author);
 	    item.setDate(QDateTime::fromString(line.section(' ', 6, 7 ), "yyyy/MM/dd hh:mm:ss") );
