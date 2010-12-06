@@ -269,7 +269,6 @@ KDevelop::VcsJob* perforceplugin::diff(const KUrl& fileOrDirectory, const KDevel
 		    break;
 		case VcsRevision::Previous:
 		    {
-			kDebug() << "########### Called with a Previous";
 			bool *ok(new bool());
 			int previous = dstRevision.prettyValue().toInt(ok);
 			previous--;
@@ -289,16 +288,10 @@ KDevelop::VcsJob* perforceplugin::diff(const KUrl& fileOrDirectory, const KDevel
 	case VcsRevision::GlobalNumber:
 	    depotSrcFileName.append("#");
 	    depotSrcFileName.append(srcRevision.prettyValue());
-	    kDebug() << "########### Called with a global number ";
 	    break;
 	case VcsRevision::Date:
-	    kDebug() << "########### Called with a global date";
-	    break;
 	case VcsRevision::Invalid:
-	    kDebug() << "########### Called with a invalid";
-	    break;
 	case VcsRevision::UserSpecialType:
-	    kDebug() << "########### Called with a UserSpecialType";
 	    break;
 	    
     }
@@ -320,12 +313,7 @@ KDevelop::VcsJob* perforceplugin::diff(const KUrl& fileOrDirectory, const KDevel
 		    *job << "p4" << "diff" << "-du" << depotSrcFileName;
 		    break;
 		case VcsRevision::Start:
-		    kDebug() << "########### dstRevision special type is start";
-		    break;
 		case VcsRevision::UserSpecialType:
-		    kDebug() << "########### dstRevision special type is user special type";
-		    break;
-		    
 		default:
 		    break;
 	    }
