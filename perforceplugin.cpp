@@ -44,11 +44,12 @@ namespace
 {
   const QString ACTION_STR("... action ");
   const QString CLIENT_FILE_STR("... clientFile ");
+  const QString DEPOT_FILE_STR("... depotFile ");
 }
 
 /* Todo:
  *
- * 			Implement diff to make commit work */
+ * 			Implement History  */
 
 K_PLUGIN_FACTORY (KdevPerforceFactory, registerPlugin<perforceplugin>();)
 K_EXPORT_PLUGIN (KdevPerforceFactory (KAboutData ("kdevperforce","kdevperforce", ki18n ("Support for Perforce Version Control System"), "0.1", ki18n ("Support for Perforce Version Control System"), KAboutData::License_GPL)))
@@ -132,6 +133,29 @@ bool perforceplugin::parseP4fstat(const QFileInfo& curFile, OutputJob::OutputJob
     return false;
 }
 
+QString perforceplugin::getRepositoryName(const QFileInfo& curFile)
+{
+    QString ret;
+    QScopedPointer<DVcsJob> job(p4fstatJob(curFile, KDevelop::OutputJob::Silent));
+    if (job->exec() && job->status() == KDevelop::VcsJob::JobSucceeded)
+    {
+        if (!job->output().isEmpty())
+	{
+	    QStringList outputLines = job->output().split('\n', QString::SkipEmptyParts);
+	    foreach(const QString& line, outputLines)
+	    {
+		int idx(line.indexOf(DEPOT_FILE_STR));
+		if (idx != -1)
+		{
+		    ret = line.right(line.size() - DEPOT_FILE_STR.size());
+		    return ret;
+		}
+	    }
+	}
+    }
+    
+    return ret; 
+}
 
 KDevelop::VcsJob* perforceplugin::repositoryLocation(const KUrl& /*localLocation*/)
 {
@@ -163,7 +187,7 @@ KDevelop::VcsJob* perforceplugin::move(const KUrl& /*localLocationSrc*/, const K
     return 0;
 }
 
-KDevelop::VcsJob* perforceplugin::status(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode recursion)
+KDevelop::VcsJob* perforceplugin::status(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     if (localLocations.count() != 1)
     {
@@ -210,7 +234,7 @@ KDevelop::VcsJob* perforceplugin::update(const KUrl::List& localLocations, const
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::commit(const QString& message, const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode recursion)
+KDevelop::VcsJob* perforceplugin::commit(const QString& message, const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     if (localLocations.empty() || message.isEmpty())
         return errorsFound(i18n("No files or message specified"));
@@ -225,13 +249,28 @@ KDevelop::VcsJob* perforceplugin::commit(const QString& message, const KUrl::Lis
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::diff(const KUrl& fileOrDirectory, const KDevelop::VcsRevision& /*srcRevision*/, const KDevelop::VcsRevision& /*dstRevision*/, KDevelop::VcsDiff::Type , KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
+KDevelop::VcsJob* perforceplugin::diff(const KUrl& fileOrDirectory, const KDevelop::VcsRevision& srcRevision, const KDevelop::VcsRevision& dstRevision, KDevelop::VcsDiff::Type , KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     QFileInfo curFile(fileOrDirectory.toLocalFile());
+    QString depotCurFileName = getRepositoryName(curFile);
+    switch(srcRevision.revisionValue().value<VcsRevision::RevisionSpecialType>()) 
+    {
+	case VcsRevision::Head:
+	    depotCurFileName.append("#head");
+	    break;
+	case VcsRevision::Base:
+	    depotCurFileName.append("#have");
+	    break;
+	default:
+	    Q_ASSERT(false && "Not implemented");
+    }
+
+    kDebug() << "########### srcRevision Is: " << srcRevision.prettyValue();
+    kDebug() << "########### dstRevision Is: " << dstRevision.prettyValue();
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << "p4" << "diff" << "-du" << curFile.fileName();
+    *job << "p4" << "diff" << "-du" << depotCurFileName;
 
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4DiffOutput(KDevelop::DVcsJob*)));
     return job;

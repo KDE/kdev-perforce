@@ -18,6 +18,7 @@
 
 
 #include <QVariantList>
+#include <QString>
 
 #include <kaction.h>
 #include <KMimeType>
@@ -143,7 +144,11 @@ private:
     bool parseP4fstat(const QFileInfo& curFile, 
 		      KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
 
-    KDevelop::VcsJob* errorsFound(const QString& error, KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
+    KDevelop::VcsJob* errorsFound(const QString& error, 
+				  KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
+
+    QString getRepositoryName(const QFileInfo& curFile);
+
 
     void setEnvironmentForJob(KDevelop::DVcsJob* job, QFileInfo const& fsObject);
   
