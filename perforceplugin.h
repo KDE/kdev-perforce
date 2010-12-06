@@ -134,6 +134,8 @@ public Q_SLOTS:
 private slots:
    void parseP4StatusOutput(KDevelop::DVcsJob* job);
    void parseP4DiffOutput(KDevelop::DVcsJob* job);
+   void parseP4LogOutput(KDevelop::DVcsJob* job);
+
 
   
 private:

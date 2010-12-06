@@ -18,6 +18,7 @@
 #include <KAboutData>
 #include <KActionCollection>
 #include <QFileInfo>
+#include <QDateTime>
 #include <QDir>
 #include <QProcessEnvironment>
 #include <QMenu>
@@ -45,6 +46,7 @@ namespace
   const QString ACTION_STR("... action ");
   const QString CLIENT_FILE_STR("... clientFile ");
   const QString DEPOT_FILE_STR("... depotFile ");
+  const QString LOGENTRY_START("... #");
 }
 
 /* Todo:
@@ -261,12 +263,12 @@ KDevelop::VcsJob* perforceplugin::diff(const KUrl& fileOrDirectory, const KDevel
 	case VcsRevision::Base:
 	    depotCurFileName.append("#have");
 	    break;
-	default:
-	    Q_ASSERT(false && "Not implemented");
+/*	default:
+	    Q_ASSERT(false && "Not implemented");*/
     }
 
-    kDebug() << "########### srcRevision Is: " << srcRevision.prettyValue();
-    kDebug() << "########### dstRevision Is: " << dstRevision.prettyValue();
+     kDebug() << "########### srcRevision Is: " << srcRevision.prettyValue();
+     kDebug() << "########### dstRevision Is: " << dstRevision.prettyValue();
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
@@ -276,14 +278,26 @@ KDevelop::VcsJob* perforceplugin::diff(const KUrl& fileOrDirectory, const KDevel
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::log(const KUrl& /*localLocation*/, const KDevelop::VcsRevision& /*rev*/, long unsigned int /*limit*/)
+KDevelop::VcsJob* perforceplugin::log(const KUrl& localLocation, const KDevelop::VcsRevision& /*rev*/, long unsigned int /*limit*/)
 {
-    return 0;
+    QFileInfo curFile(localLocation.toLocalFile());
+    DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
+    setEnvironmentForJob(job, curFile);
+    *job << "p4" << "filelog" << "-l" << localLocation;
+
+    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4LogOutput(KDevelop::DVcsJob*)));
+    return job;
 }
 
-KDevelop::VcsJob* perforceplugin::log(const KUrl& /*localLocation*/, const KDevelop::VcsRevision& /*rev*/, const KDevelop::VcsRevision& /*limit*/)
+KDevelop::VcsJob* perforceplugin::log(const KUrl& localLocation, const KDevelop::VcsRevision& /*rev*/, const KDevelop::VcsRevision& /*limit*/)
 {
-    return 0;
+    QFileInfo curFile(localLocation.toLocalFile());
+    DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
+    setEnvironmentForJob(job, curFile);
+    *job << "p4" << "filelog" << "-lt" << localLocation;
+    
+    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4LogOutput(KDevelop::DVcsJob*)));
+    return job;
 }
 
 KDevelop::VcsJob* perforceplugin::annotate(const KUrl& /*localLocation*/, const KDevelop::VcsRevision& /*rev*/)
@@ -438,6 +452,53 @@ void perforceplugin::parseP4StatusOutput(DVcsJob* job)
     statuses.append(qVariantFromValue<VcsStatusInfo>(status));
     job->setResults(statuses);
 }
+
+void perforceplugin::parseP4LogOutput(KDevelop::DVcsJob* job)
+{
+    QList<QVariant> commits;
+    VcsEvent item;
+    QString commitMessage;
+    QStringList outputLines = job->output().split('\n', QString::SkipEmptyParts);
+    bool foundAChangelist(false);
+    /// I'm pretty sure this could be done more elegant.
+    foreach(const QString& line, outputLines)
+    {
+        int idx(line.indexOf(LOGENTRY_START));
+        if (idx != -1)
+        {
+	    if(!foundAChangelist)
+	    {
+		foundAChangelist = true;
+	    }
+	    else
+	    {
+		item.setMessage(commitMessage.trimmed()); 
+		commits.append(QVariant::fromValue(item));
+		commitMessage.clear();
+	    }
+	    // expecting the Logentry line to be of the form:
+	    //... #5 change 10 edit on 2010/12/06 12:07:31 by mvo@testbed (text)
+	    QString changeNumber(line.section(' ', 3, 3 ));
+	    QString author(line.section(' ', 9, 9 ));
+	    VcsRevision rev;
+	    rev.setRevisionValue(changeNumber, KDevelop::VcsRevision::GlobalNumber);
+	    item.setRevision(rev);
+	    item.setAuthor(author);
+	    item.setDate(QDateTime::fromString(line.section(' ', 6, 7 ), "yyyy/MM/dd hh:mm:ss") );
+	} 
+	else
+	{
+	    if(foundAChangelist)
+		commitMessage += line +'\n';
+	}
+	    
+    }
+    item.setMessage(commitMessage); 
+    commits.append(QVariant::fromValue(item));
+    
+    job->setResults(commits);
+}
+
 
 void perforceplugin::parseP4DiffOutput(DVcsJob* job)
 {
