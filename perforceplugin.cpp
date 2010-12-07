@@ -342,6 +342,12 @@ KDevelop::VcsJob* perforceplugin::log(const KUrl& localLocation, const KDevelop:
 KDevelop::VcsJob* perforceplugin::log(const KUrl& localLocation, const KDevelop::VcsRevision& /*rev*/, const KDevelop::VcsRevision& /*limit*/)
 {
     QFileInfo curFile(localLocation.toLocalFile());
+    if (curFile.isDir())
+    {
+	KMessageBox::error(0, i18n("Please select a file for this operation"));
+	return errorsFound(i18n("Directory not supported for this operation"));
+    }
+    
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
     *job << "p4" << "filelog" << "-lt" << localLocation;
