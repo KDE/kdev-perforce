@@ -51,7 +51,16 @@ namespace
 
 /* Todo:
  *
- * 			Implement History  */
+ * 1) Get rid of the setEnvironment for job hazzle, which basically breaks down to:
+ * PWD environment variable is used by the p4 tool to determine its current working directory. 
+ * In the constructor of DVSJOb there is a call to setCurrentWorkingDirectory which apparently does 
+ * not affect PWD variable. 
+ * In DvcsJob.cpp (from kdevplatform) remove the follwing line: 
+ *     d->childproc->setEnvironment(QProcess::systemEnvironment()); 
+ * 
+ * 2) Use a namespace
+ * 3) ?
+ */
 
 K_PLUGIN_FACTORY (KdevPerforceFactory, registerPlugin<perforceplugin>();)
 K_EXPORT_PLUGIN (KdevPerforceFactory (KAboutData ("kdevperforce","kdevperforce", ki18n ("Support for Perforce Version Control System"), "0.1", ki18n ("Support for Perforce Version Control System"), KAboutData::License_GPL)))
@@ -231,8 +240,13 @@ KDevelop::VcsJob* perforceplugin::update(const KUrl::List& localLocations, const
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << "p4" << "-p" << "127.0.0.1:1666" << "info";
-
+    //*job << "p4" << "-p" << "127.0.0.1:1666" << "info"; - Let's keep this for now it's very handy for debugging
+    QString fileOrDirectory;
+    if(curFile.isDir())
+	fileOrDirectory = curFile.absolutePath() + "/...";
+    else
+	fileOrDirectory = curFile.fileName();
+    *job << "p4" << "sync" << fileOrDirectory;
     return job;
 }
 
