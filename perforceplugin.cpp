@@ -51,15 +51,8 @@ namespace
 
 /* Todo:
  *
- * 1) Get rid of the setEnvironment for job hazzle, which basically breaks down to:
- * PWD environment variable is used by the p4 tool to determine its current working directory. 
- * In the constructor of DVSJOb there is a call to setCurrentWorkingDirectory which apparently does 
- * not affect PWD variable. 
- * In DvcsJob.cpp (from kdevplatform) remove the follwing line: 
- *     d->childproc->setEnvironment(QProcess::systemEnvironment()); 
- * 
- * 2) Use a namespace
- * 3) ?
+ * 1) Use a namespace
+ * 2) Unify the way errors are handled. 
  */
 
 K_PLUGIN_FACTORY (KdevPerforceFactory, registerPlugin<perforceplugin>();)
