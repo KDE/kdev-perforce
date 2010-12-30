@@ -135,7 +135,8 @@ private slots:
    void parseP4StatusOutput(KDevelop::DVcsJob* job);
    void parseP4DiffOutput(KDevelop::DVcsJob* job);
    void parseP4LogOutput(KDevelop::DVcsJob* job);
-
+   void parseP4AnnotateOutput(KDevelop::DVcsJob* job);
+   
 
   
 private:
@@ -153,6 +154,8 @@ private:
 
 
     void setEnvironmentForJob(KDevelop::DVcsJob* job, QFileInfo const& fsObject);
+    QList<QVariant> getQvariantFromLogOutput(QStringList const& outputLines );
+    
   
     std::auto_ptr<KDevelop::VcsPluginHelper> m_common;
     QMenu* m_perforcemenu;
