@@ -51,8 +51,14 @@ namespace
 
 /* Todo:
  *
- * 1) Use a namespace
- * 2) Unify the way errors are handled. 
+ * 1) Implement annotate
+ * - Need to get the filelog for a filelog
+ * - Connect changelists with line annotation
+ * 
+ * 2) Add a Installation instructions file and a README
+ * 3) Use a namespace
+ * 4) Unify the way errors are handled.
+ * 5) Implement some unittests 
  */
 
 K_PLUGIN_FACTORY (KdevPerforceFactory, registerPlugin<perforceplugin>();)
@@ -363,9 +369,21 @@ KDevelop::VcsJob* perforceplugin::log(const KUrl& localLocation, const KDevelop:
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::annotate(const KUrl& /*localLocation*/, const KDevelop::VcsRevision& /*rev*/)
+KDevelop::VcsJob* perforceplugin::annotate(const KUrl& localLocation, const KDevelop::VcsRevision& /*rev*/)
 {
-    return 0;
+    QFileInfo curFile(localLocation.toLocalFile());
+    if (curFile.isDir())
+    {
+	KMessageBox::error(0, i18n("Please select a file for this operation"));
+	return errorsFound(i18n("Directory not supported for this operation"));
+    }
+
+DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
+    setEnvironmentForJob(job, curFile);
+    *job << "p4" << "annotate" << "-q" << localLocation;
+    
+    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4AnnotateOutput(KDevelop::DVcsJob*)));
+    return job;
 }
 
 KDevelop::VcsJob* perforceplugin::resolve(const KUrl::List& /*localLocations*/, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
@@ -472,6 +490,55 @@ void perforceplugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile
     //kDebug() << "After setting the environment : " << afterEnv;
 }
 
+QList<QVariant> perforceplugin::getQvariantFromLogOutput(QStringList const& outputLines )
+{
+    QList<QVariant> commits;
+    VcsEvent item;
+    QString commitMessage;
+    bool foundAChangelist(false);
+    /// I'm pretty sure this could be done more elegant.
+    foreach(const QString& line, outputLines)
+    {
+	int idx(line.indexOf(LOGENTRY_START));
+	if (idx != -1)
+	{
+	    if(!foundAChangelist)
+	    {
+		foundAChangelist = true;
+	    }
+	    else
+	    {
+		item.setMessage(commitMessage.trimmed()); 
+		commits.append(QVariant::fromValue(item));
+		commitMessage.clear();
+	    }
+	    // expecting the Logentry line to be of the form:
+	    //... #5 change 10 edit on 2010/12/06 12:07:31 by mvo@testbed (text)
+	    //QString changeNumber(line.section(' ', 3, 3 ));
+	    QString localChangeNumber(line.section(' ', 1, 1 ));
+	    localChangeNumber.remove(0, 1); // Remove the # from the local revision number
+	    
+	    QString author(line.section(' ', 9, 9 ));
+	    VcsRevision rev;
+	    rev.setRevisionValue(localChangeNumber, KDevelop::VcsRevision::FileNumber);
+	    item.setRevision(rev);
+	    item.setAuthor(author);
+	    item.setDate(QDateTime::fromString(line.section(' ', 6, 7 ), "yyyy/MM/dd hh:mm:ss") );
+	} 
+	else
+	{
+	    if(foundAChangelist)
+		commitMessage += line +'\n';
+	}
+	
+    }
+    item.setMessage(commitMessage); 
+    commits.append(QVariant::fromValue(item));
+    
+    return commits;
+}
+
+
 void perforceplugin::parseP4StatusOutput(DVcsJob* job)
 {
     QStringList outputLines = job->output().split('\n', QString::SkipEmptyParts);
@@ -518,53 +585,10 @@ void perforceplugin::parseP4StatusOutput(DVcsJob* job)
 
 void perforceplugin::parseP4LogOutput(KDevelop::DVcsJob* job)
 {
-    QList<QVariant> commits;
-    VcsEvent item;
-    QString commitMessage;
-    QStringList outputLines = job->output().split('\n', QString::SkipEmptyParts);
-    bool foundAChangelist(false);
-    /// I'm pretty sure this could be done more elegant.
-    foreach(const QString& line, outputLines)
-    {
-        int idx(line.indexOf(LOGENTRY_START));
-        if (idx != -1)
-        {
-	    if(!foundAChangelist)
-	    {
-		foundAChangelist = true;
-	    }
-	    else
-	    {
-		item.setMessage(commitMessage.trimmed()); 
-		commits.append(QVariant::fromValue(item));
-		commitMessage.clear();
-	    }
-	    // expecting the Logentry line to be of the form:
-	    //... #5 change 10 edit on 2010/12/06 12:07:31 by mvo@testbed (text)
-	    //QString changeNumber(line.section(' ', 3, 3 ));
-	    QString localChangeNumber(line.section(' ', 1, 1 ));
-	    localChangeNumber.remove(0, 1); // Remove the # from the local revision number
-	    
-	    QString author(line.section(' ', 9, 9 ));
-	    VcsRevision rev;
-	    rev.setRevisionValue(localChangeNumber, KDevelop::VcsRevision::FileNumber);
-	    item.setRevision(rev);
-	    item.setAuthor(author);
-	    item.setDate(QDateTime::fromString(line.section(' ', 6, 7 ), "yyyy/MM/dd hh:mm:ss") );
-	} 
-	else
-	{
-	    if(foundAChangelist)
-		commitMessage += line +'\n';
-	}
-	    
-    }
-    item.setMessage(commitMessage); 
-    commits.append(QVariant::fromValue(item));
+    QList<QVariant> commits(getQvariantFromLogOutput(job->output().split('\n', QString::SkipEmptyParts)));
     
     job->setResults(commits);
 }
-
 
 void perforceplugin::parseP4DiffOutput(DVcsJob* job)
 {
@@ -586,6 +610,69 @@ void perforceplugin::parseP4DiffOutput(DVcsJob* job)
 
     job->setResults(qVariantFromValue(diff));
 }
+
+void perforceplugin::parseP4AnnotateOutput(DVcsJob *job)
+{
+    QVariantList results;
+    QList<QVariant> commits;
+    /// First get the changelists for this file
+    QStringList strList(job->dvcsCommand());
+    KUrl localLocation(strList.last()); /// ASSUMPTION WARNING - localLocation is the last in the annotate command
+    KDevelop::VcsRevision dummyRev;
+    QScopedPointer<DVcsJob> logJob(new DVcsJob(job->directory(), this, OutputJob::Silent));
+    QFileInfo curFile(localLocation.toLocalFile());
+    setEnvironmentForJob(logJob.data(), curFile);
+    *logJob << "p4" << "filelog" << "-lt" << localLocation;
+	       
+    if (logJob->exec() && logJob->status() == KDevelop::VcsJob::JobSucceeded)
+    {
+	if (!job->output().isEmpty())
+	{
+	    commits = getQvariantFromLogOutput(logJob->output().split('\n', QString::SkipEmptyParts));
+	}
+    }
+    VcsAnnotationLine* annotation;
+    QStringList lines = job->output().split('\n');
+    
+    VcsEvent item;
+    size_t lineNumber(0);
+    QMap<QString, VcsAnnotationLine> definedRevisions;
+    bool convertToIntOk(false);
+    int localRevisionInt(0);
+    QString localRevision;
+    for(QStringList::const_iterator it = lines.constBegin(), itEnd = lines.constEnd();
+	it != itEnd; ++it)
+    {
+	if(it->isEmpty())
+	    continue;
+
+	localRevision = it->left(it->indexOf(':'));
+	
+	annotation = new VcsAnnotationLine;
+	annotation->setLineNumber(lineNumber);
+	VcsRevision rev;
+	rev.setRevisionValue(localRevision, KDevelop::VcsRevision::FileNumber);
+	annotation->setRevision(rev);
+	
+	// Find the other info in the commits list
+	localRevisionInt = commits.size() - localRevision.toInt(&convertToIntOk); 
+	// Skip if we are not going to find the correct event in the List - Set values otherwise
+	if(convertToIntOk &&
+	   localRevisionInt >= commits.size() &&
+	   commits.at(localRevisionInt).canConvert<VcsEvent>())
+	{
+	    item = commits.at(localRevisionInt).value<VcsEvent>();
+	    annotation->setAuthor(item.author());
+	    annotation->setCommitMessage(item.message());
+	    annotation->setDate(item.date());
+	}
+	
+	results += qVariantFromValue(*annotation);
+	++lineNumber;
+    }
+    job->setResults(results);
+}
+
 
 KDevelop::VcsJob* perforceplugin::errorsFound(const QString& error, KDevelop::OutputJob::OutputJobVerbosity verbosity)
 {
