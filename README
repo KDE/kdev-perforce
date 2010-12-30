@@ -1,0 +1,48 @@
+   KDevelop Custom Buildsystem Plugin
+
+Author:
+-------
+
+Andreas Pakulat <apaku@gmx.de>
+
+License:
+--------
+
+See the LICENSE file.
+
+Description:
+------------
+
+This plugin facilitates integration with the perforce version control system
+
+It supports:
+
+   * Adding files to a perforce repository
+   * Opening a file for edit 
+   * Reverting changes made to a file
+   * Updating a file to the latest version (head) in the repository 
+   * Listing the change history of a files
+   * Comparing a file to latest verion (head)
+   * Comparing a file to the version that a given perforce client has checked out (have revision)
+   * Comparing any given two revisions (through the history)
+   * Annotating a file (i.e. telling from which changelist a given line of code came from )
+
+
+Requirements:
+-------------
+
+The perforce command line client found at: http://www.perforce.com/perforce/downloads/index.html
+
+KDevPlatform, version 1.1.0 (which in turn means that
+KDE Platform 4.4 or later needs to be installed too)
+
+Installation:
+-------------
+
+See the INSTALL file.
+
+Bugs:
+-----
+
+Please report bugs at bugs.kde.org under the KDevelop product 
+

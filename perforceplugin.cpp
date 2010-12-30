@@ -51,14 +51,11 @@ namespace
 
 /* Todo:
  *
- * 1) Implement annotate
- * - Need to get the filelog for a filelog
- * - Connect changelists with line annotation
  * 
- * 2) Add a Installation instructions file and a README
- * 3) Use a namespace
- * 4) Unify the way errors are handled.
- * 5) Implement some unittests 
+ * 1) Add a Installation instructions file and a README
+ * 2) Use a namespace
+ * 3) Unify the way errors are handled.
+ * 4) Implement some unittests 
  */
 
 K_PLUGIN_FACTORY (KdevPerforceFactory, registerPlugin<perforceplugin>();)
