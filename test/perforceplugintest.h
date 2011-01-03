@@ -8,9 +8,3 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "perforceplugintest.h"
-
-#include <QtTest/QtTest>
-
-#include <qtest_kde.h>
-
