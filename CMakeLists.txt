@@ -10,6 +10,8 @@ set(KDE_MIN_VERSION "4.2.0")
 find_package(KDE4 4.2.0 REQUIRED)
 find_package(KDevPlatform 0.9.95 REQUIRED)
 
+add_subdirectory(test)
+
 include (KDE4Defaults)
 
 add_definitions (${QT_DEFINITIONS} ${KDE4_DEFINITIONS} -DHAVE_CONFIG_H=1)
@@ -37,5 +39,6 @@ install(TARGETS kdevperforce DESTINATION ${PLUGIN_INSTALL_DIR} )
 ########### install files ###############
 install( FILES kdevperforce.desktop DESTINATION ${SERVICES_INSTALL_DIR} )
 install( FILES kdevperforce.rc DESTINATION ${DATA_INSTALL_DIR}/kdevperforce)
+
 
 
