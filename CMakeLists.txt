@@ -1,22 +1,21 @@
 project(kdevperforce)
 
+set(KDE4_BUILD_TESTS "ON" CACHE "BOOL" "Enable building of tests" FORCE )
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${kdevperforce_SOURCE_DIR}/cmake)
 
 add_definitions(-DKDE_DEFAULT_DEBUG_AREA=9025)
 
-set(KDE_MIN_VERSION "4.2.0")
-
-
-find_package(KDE4 4.2.0 REQUIRED)
-find_package(KDevPlatform 0.9.95 REQUIRED)
-
-add_subdirectory(test)
-
-include (KDE4Defaults)
+find_package(KDE4 4.5.1 REQUIRED)
+include(KDE4Defaults)
+include(MacroLibrary)
+find_package(KDevPlatform 1.1.60 REQUIRED)
 
 add_definitions (${QT_DEFINITIONS} ${KDE4_DEFINITIONS} -DHAVE_CONFIG_H=1)
 
 include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${KDE4_INCLUDES} ${KDEVPLATFORM_INCLUDE_DIR} )
+
+add_subdirectory(test)
 
 set(kdevperforce_PART_SRCS
     perforceplugin.cpp

@@ -1,5 +1,6 @@
 set( perforceplugintest_SRCS
      perforceplugintest.cpp
+     ../perforceplugin.cpp
    )
 
 add_definitions( "-DPROJECTS_SOURCE_DIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/projects\\\"" )

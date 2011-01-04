@@ -52,7 +52,7 @@ namespace
 /* Todo:
  *
  * 
- * 1) Add a Installation instructions file and a README
+ * 1) Add a Installation instructions file and a README - Done
  * 2) Use a namespace
  * 3) Unify the way errors are handled.
  * 4) Implement some unittests 
