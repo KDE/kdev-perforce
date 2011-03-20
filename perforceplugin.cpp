@@ -382,7 +382,7 @@ KDevelop::VcsJob* perforceplugin::annotate(const KUrl& localLocation, const KDev
 	return errorsFound(i18n("Directory not supported for this operation"));
     }
 
-DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
+    DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
     *job << "p4" << "annotate" << "-q" << localLocation;
     
@@ -648,7 +648,9 @@ void perforceplugin::parseP4AnnotateOutput(DVcsJob *job)
 	it != itEnd; ++it)
     {
 	if(it->isEmpty())
+	{
 	    continue;
+	}
 
 	localRevision = it->left(it->indexOf(':'));
 	
@@ -662,7 +664,7 @@ void perforceplugin::parseP4AnnotateOutput(DVcsJob *job)
 	localRevisionInt = commits.size() - localRevision.toInt(&convertToIntOk); 
 	// Skip if we are not going to find the correct event in the List - Set values otherwise
 	if(convertToIntOk &&
-	   localRevisionInt >= commits.size() &&
+	   localRevisionInt <= commits.size() &&
 	   commits.at(localRevisionInt).canConvert<VcsEvent>())
 	{
 	    item = commits.at(localRevisionInt).value<VcsEvent>();
