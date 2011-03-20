@@ -45,13 +45,13 @@ QVERIFY(j); QVERIFY(j->exec()); QVERIFY((j)->status() == KDevelop::VcsJob::JobSu
 const QString tempDir = QDir::tempPath();
 const QString perforceTestBaseDir(tempDir + "/kdevPerforce_testdir/");
 const QString perforceTestBaseDir2(tempDir + "/kdevPerforce_testdir2/");
-const QString perforceConfigFileName(tempDir + "/p4config.txt" );
+const QString perforceConfigFileName( "p4config.txt" );
 
-const QString gitRepo(perforceTestBaseDir + ".git");
-const QString gitSrcDir(perforceTestBaseDir + "src/");
-const QString gitTest_FileName("testfile");
-const QString gitTest_FileName2("foo");
-const QString gitTest_FileName3("bar");
+//const QString gitRepo(perforceTestBaseDir + ".git");
+const QString perforceSrcDir(perforceTestBaseDir + "src/");
+const QString perforceTest_FileName("testfile");
+const QString perforceTest_FileName2("foo");
+const QString perforceTest_FileName3("bar");
 
 /// TODO make sure a valid p4Config.txt has been added to the test
 /// We may need to find some way to add a valid client too?
@@ -64,12 +64,49 @@ void PerforcePluginTest::init()
     m_core = new KDevelop::TestCore();
     m_core->initialize( KDevelop::Core::NoUi );
     m_plugin = new perforceplugin(m_core);
+    removeTempDirsIfAny();
+    createNewTempDirs();
 }
+
+void PerforcePluginTest::createNewTempDirs()
+{
+     // Now create the basic directory structure
+    QDir tmpdir(tempDir);
+    tmpdir.mkdir(perforceTestBaseDir);
+    //we start it after repoInit, so we still have empty git repo
+    QFile f(perforceTestBaseDir + perforceConfigFileName);
+    
+    if (f.open(QIODevice::WriteOnly)) {
+	QTextStream input(&f);
+	input << "P4PORT=127.0.0.1:1666\n";
+	input << "P4USER=mvo\n";
+	input << "P4CLIENT=testbed\n";
+    }
+    
+    f.close();
+
+    tmpdir.mkdir(perforceSrcDir);
+    tmpdir.mkdir(perforceTestBaseDir2);
+}
+
+
+void PerforcePluginTest::removeTempDirsIfAny()
+{
+    if (QFileInfo(perforceTestBaseDir).exists())
+        if (!KIO::NetAccess::del(KUrl(perforceTestBaseDir), 0))
+            qDebug() << "KIO::NetAccess::del(" << perforceTestBaseDir << ") returned false";
+
+    if (QFileInfo(perforceTestBaseDir2).exists())
+        if (!KIO::NetAccess::del(KUrl(perforceTestBaseDir2), 0))
+            qDebug() << "KIO::NetAccess::del(" << perforceTestBaseDir2 << ") returned false";
+}
+
 
 void PerforcePluginTest::cleanup()
 {
     m_core->cleanup();
     delete m_core;
+    removeTempDirsIfAny();
 }
 
 void PerforcePluginTest::testAdd()
@@ -77,7 +114,7 @@ void PerforcePluginTest::testAdd()
     kDebug() << "Adding files to the repo";
     
     //we start it after repoInit, so we still have empty git repo
-    QFile f(perforceTestBaseDir + gitTest_FileName);
+    QFile f(perforceTestBaseDir + perforceTest_FileName);
     
     if (f.open(QIODevice::WriteOnly)) {
 	QTextStream input(&f);
@@ -85,7 +122,7 @@ void PerforcePluginTest::testAdd()
     }
     
     f.close();
-    f.setFileName(perforceTestBaseDir + gitTest_FileName2);
+    f.setFileName(perforceTestBaseDir + perforceTest_FileName2);
     
     if (f.open(QIODevice::WriteOnly)) {
 	QTextStream input(&f);
@@ -99,10 +136,10 @@ void PerforcePluginTest::testAdd()
     VERIFYJOB(j);
     
     // /tmp/kdevGit_testdir/ and testfile
-    j = m_plugin->add(KUrl::List(perforceTestBaseDir + gitTest_FileName));
+    j = m_plugin->add(KUrl::List(perforceTestBaseDir + perforceTest_FileName));
     VERIFYJOB(j);
     
-    f.setFileName(gitSrcDir + gitTest_FileName3);
+    f.setFileName(perforceSrcDir + perforceTest_FileName3);
     
     if (f.open(QIODevice::WriteOnly)) {
 	QTextStream input(&f);
@@ -117,11 +154,11 @@ void PerforcePluginTest::testAdd()
     
     //repository path without trailing slash and a file in a parent directory
     // /tmp/repo  and /tmp/repo/src/bar
-    j = m_plugin->add(KUrl::List(QStringList(gitSrcDir + gitTest_FileName3)));
+    j = m_plugin->add(KUrl::List(QStringList(perforceSrcDir + perforceTest_FileName3)));
     VERIFYJOB(j);
     
     //let's use absolute path, because it's used in ContextMenus
-    j = m_plugin->add(KUrl::List(QStringList(perforceTestBaseDir + gitTest_FileName2)));
+    j = m_plugin->add(KUrl::List(QStringList(perforceTestBaseDir + perforceTest_FileName2)));
     VERIFYJOB(j);
     
     //Now let's create several files and try "git add file1 file2 file3"

@@ -41,6 +41,8 @@ private slots:
 private:
     perforceplugin* m_plugin;
     KDevelop::TestCore* m_core;
+    void removeTempDirsIfAny();
+    void createNewTempDirs();
 };
 
 #endif
