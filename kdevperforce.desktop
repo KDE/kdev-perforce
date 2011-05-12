@@ -1,12 +1,9 @@
 [Desktop Entry]
 Type=Service
 Exec=blubb
-Comment=Provides Integration with Perforce VCS
-Comment[x-test]=xxProvides Integration with Perforce VCSxx
-Name=Perforce Plug-in
-Name[x-test]=xxPerforce Plug-inxx
-GenericName=Perforce Plug-in 
-GenericName[x-test]=xxPerforce Plug-in xx
+Comment=Provides Integration with Perforce Version Control System
+Name=Perforce Support
+GenericName=Perforce VCS
 Icon=kdevelop
 ServiceTypes=KDevelop/Plugin
 X-KDE-Library=kdevperforce
