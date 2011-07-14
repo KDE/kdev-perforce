@@ -66,7 +66,7 @@ namespace
  */
 
 K_PLUGIN_FACTORY (KdevPerforceFactory, registerPlugin<perforceplugin>();)
-K_EXPORT_PLUGIN (KdevPerforceFactory (KAboutData ("kdevperforce","kdevperforce", ki18n ("Support for Perforce Version Control System"), "0.1", ki18n ("Support for Perforce Version Control System"), KAboutData::License_GPL)))
+K_EXPORT_PLUGIN (KdevPerforceFactory (KAboutData ("kdevperforce","kdevperforce", ki18n ("Perforce"), "0.1", ki18n ("Support for Perforce Version Control System"), KAboutData::License_GPL)))
 
 perforceplugin::perforceplugin(QObject* parent, const QVariantList& ):
         KDevelop::IPlugin(KdevPerforceFactory::componentData(), parent )
