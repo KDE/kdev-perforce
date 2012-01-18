@@ -1,4 +1,4 @@
 [Project]
-Name=perforce
 Manager=KDevCMakeManager
+Name=kdev-perforce
 VersionControl=
