@@ -9,5 +9,6 @@ kde4_add_unit_test( perforceplugintest ${perforceplugintest_SRCS} )
 target_link_libraries( perforceplugintest
         ${QT_QTTEST_LIBRARY}
         ${KDEVPLATFORM_TESTS_LIBRARIES}
+        ${KDEVPLATFORM_VCS_LIBRARIES}
     )
 
