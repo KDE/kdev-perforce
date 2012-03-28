@@ -36,6 +36,15 @@ The perforce command line client found at: http://www.perforce.com/perforce/down
 KDevPlatform, version 1.1.0 (which in turn means that
 KDE Platform 4.4 or later needs to be installed too)
 
+The perforce command line client will expect there to be a file called p4config.txt in your perforce 
+workspace root. If your p4config.txt file located elsewhere the variable P4CONFIG needs to be set in
+the evironment where KDevelop is runnig in order for the perforce plugin to function correctly. 
+
+For more information about P4CONFIG please refer to:
+
+http://www.perforce.com/perforce/doc.current/manuals/cmdref/index.html
+
+
 Installation:
 -------------
 
