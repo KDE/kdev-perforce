@@ -47,7 +47,6 @@ const QString perforceTestBaseDir(tempDir + "/kdevPerforce_testdir/");
 const QString perforceTestBaseDir2(tempDir + "/kdevPerforce_testdir2/");
 const QString perforceConfigFileName( "p4config.txt" );
 
-//const QString gitRepo(perforceTestBaseDir + ".git");
 const QString perforceSrcDir(perforceTestBaseDir + "src/");
 const QString perforceTest_FileName("testfile");
 const QString perforceTest_FileName2("foo");

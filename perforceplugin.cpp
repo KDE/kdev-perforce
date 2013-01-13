@@ -74,17 +74,26 @@ perforceplugin::perforceplugin(QObject* parent, const QVariantList& ):
         , m_perforcemenu( 0 )
         , m_perforceConfigName("p4config.txt")
         , m_edit_action( 0 )
+	, m_hasError(true)
 {
-    KDEV_USE_EXTENSION_INTERFACE( KDevelop::IBasicVersionControl )
-    KDEV_USE_EXTENSION_INTERFACE( KDevelop::ICentralizedVersionControl )
-
     QProcessEnvironment currentEviron(QProcessEnvironment::systemEnvironment());
-    // We will default search for p4config.txt - However if something else is used, search for that
     QString tmp(currentEviron.value("P4CONFIG"));
-    if (!tmp.isEmpty())
+    if (tmp.isEmpty())
+    {
+        // We require the P4CONFIG variable to be set because the perforce command line client will need it
+        m_hasError = true;
+        m_errorDescription = i18n("The variable P4CONFIG is not set.");
+	return;
+    }
+    else
     {
         m_perforceConfigName = tmp;
     }
+    m_hasError = false;
+
+    KDEV_USE_EXTENSION_INTERFACE( KDevelop::IBasicVersionControl )
+    KDEV_USE_EXTENSION_INTERFACE( KDevelop::ICentralizedVersionControl )
+
 }
 
 perforceplugin::~perforceplugin()
@@ -447,7 +456,6 @@ KDevelop::ContextMenuExtension perforceplugin::contextMenuExtension(KDevelop::Co
             break;
         }
     }
-
     //kDebug() << "version controlled?" << hasVersionControlledEntries;
 
     if (!hasVersionControlledEntries)
@@ -486,11 +494,11 @@ void perforceplugin::ctxEdit()
 void perforceplugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile)
 {
     KProcess* jobproc = job->process();
-    QStringList beforeEnv = jobproc->environment();
+    //QStringList beforeEnv = jobproc->environment();
     //kDebug() << "Before setting the environment : " << beforeEnv;
     jobproc->setEnv("P4CONFIG", m_perforceConfigName);
     jobproc->setEnv("PWD", curFile.absolutePath());
-    QStringList afterEnv = jobproc->environment();
+    //QStringList afterEnv = jobproc->environment();
     //kDebug() << "After setting the environment : " << afterEnv;
 }
 
@@ -685,6 +693,16 @@ KDevelop::VcsJob* perforceplugin::errorsFound(const QString& error, KDevelop::Ou
     DVcsJob* j = new DVcsJob(QDir::temp(), this, verbosity);
     *j << "echo" << i18n("error: %1", error) << "-n";
     return j;
+}
+
+bool perforceplugin::hasError() const
+{
+    return m_hasError;
+}
+
+QString perforceplugin::errorDescription() const
+{
+    return m_errorDescription;
 }
 
 

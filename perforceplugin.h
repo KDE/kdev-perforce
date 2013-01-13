@@ -126,6 +126,9 @@ public:
                              const KUrl & sourceDirectory, 
                              const  KDevelop::VcsLocation & destinationRepository);
   //@}  
+    
+    bool hasError() const;
+    QString errorDescription() const;
   
     KDevelop::ContextMenuExtension contextMenuExtension(KDevelop::Context* context);
   
@@ -169,7 +172,8 @@ private:
     QString m_perforceConfigName;
     KAction* m_edit_action;
 
-
+    bool m_hasError;
+    QString m_errorDescription;
 
 };
 
