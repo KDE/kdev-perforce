@@ -3,6 +3,7 @@ Type=Service
 Exec=blubb
 Comment=Provides Integration with Perforce Version Control System
 Comment[bg]=Поддръжка на системата за управление на версии Perforce
+Comment[de]=Stellt Integration mit dem Versionsverwaltungssystem Perforce zur Verfügung
 Comment[es]=Proporciona integración con el sistema de control de versiones Perforce
 Comment[et]=Lõimimine versioonihaldussüsteemiga Perforce
 Comment[fr]=Fournit une intégration avec le système de contrôle de versions Perforce
