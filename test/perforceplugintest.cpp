@@ -71,15 +71,22 @@ void PerforcePluginTest::createNewTempDirs()
     tmpdir.mkdir(perforceTestBaseDir);
     //we start it after repoInit, so we still have empty repo
     QFile f(perforceTestBaseDir + perforceConfigFileName);
-    
     if (f.open(QIODevice::WriteOnly)) {
 	QTextStream input(&f);
 	input << "P4PORT=127.0.0.1:1666\n";
 	input << "P4USER=mvo\n";
 	input << "P4CLIENT=testbed\n";
     }
-    
     f.close();
+	
+    //Put a file here because the annotate and update function will check for that
+    QFile g(perforceTestBaseDir + perforceTest_FileName);
+    if (g.open(QIODevice::WriteOnly)) {
+		QTextStream input(&g);
+		input << "HELLO WORLD";
+    }
+    g.close();
+
 
     tmpdir.mkdir(perforceSrcDir);
     tmpdir.mkdir(perforceTestBaseDir2);
@@ -122,6 +129,44 @@ void PerforcePluginTest::testStatus()
     KDevelop::VcsJob* j = m_plugin->status(KUrl::List(perforceTestBaseDir));
     VERIFYJOB(j);
 }
+
+void PerforcePluginTest::testAnnotate()
+{
+    KDevelop::VcsJob* j = m_plugin->annotate(KUrl(perforceTestBaseDir + perforceTest_FileName));
+    VERIFYJOB(j);
+}
+
+void PerforcePluginTest::testHistory()
+{
+    KDevelop::VcsJob* j = m_plugin->log(KUrl(perforceTestBaseDir + perforceTest_FileName));
+    VERIFYJOB(j);
+}
+
+void PerforcePluginTest::testRevert()
+{
+    KDevelop::VcsJob* j = m_plugin->revert(KUrl(perforceTestBaseDir + perforceTest_FileName));
+    VERIFYJOB(j);
+}
+
+void PerforcePluginTest::testUpdateFile()
+{
+    KDevelop::VcsJob* j = m_plugin->update(KUrl(perforceTestBaseDir + perforceTest_FileName));
+    VERIFYJOB(j);
+}
+
+void PerforcePluginTest::testUpdateDir()
+{
+    KDevelop::VcsJob* j = m_plugin->update(KUrl(perforceTestBaseDir));
+    VERIFYJOB(j);
+}
+
+void PerforcePluginTest::testCommit()
+{
+	QString commitMsg("this is the commit message");
+    KDevelop::VcsJob* j = m_plugin->commit(commitMsg, KUrl(perforceTestBaseDir));
+    VERIFYJOB(j);
+}
+
 
 
 QTEST_KDEMAIN(PerforcePluginTest, GUI)
