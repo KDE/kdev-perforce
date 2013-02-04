@@ -15,6 +15,7 @@ add_definitions (${QT_DEFINITIONS} ${KDE4_DEFINITIONS} -DHAVE_CONFIG_H=1)
 
 include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${KDE4_INCLUDES} ${KDEVPLATFORM_INCLUDE_DIR} )
 
+add_subdirectory(p4clientstub)
 add_subdirectory(test)
 
 set(kdevperforce_PART_SRCS
@@ -38,6 +39,7 @@ install(TARGETS kdevperforce DESTINATION ${PLUGIN_INSTALL_DIR} )
 ########### install files ###############
 install( FILES kdevperforce.desktop DESTINATION ${SERVICES_INSTALL_DIR} )
 install( FILES kdevperforce.rc DESTINATION ${DATA_INSTALL_DIR}/kdevperforce)
+
 
 
 

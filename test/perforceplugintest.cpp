@@ -52,17 +52,14 @@ const QString perforceTest_FileName("testfile");
 const QString perforceTest_FileName2("foo");
 const QString perforceTest_FileName3("bar");
 
-/// TODO make sure a valid p4Config.txt has been added to the test
-/// We may need to find some way to add a valid client too?
-
-
-
 void PerforcePluginTest::init()
 {
     KDevelop::AutoTestShell::init();
     m_core = new KDevelop::TestCore();
     m_core->initialize( KDevelop::Core::NoUi );
-    m_plugin = new perforceplugin(m_core);
+    m_plugin = new PerforcePlugin(m_core);
+	/// TODO: FIND OUT HOW WE CAN MAKE THE SETUP OF OUR BUILD RESOLVE THIS 
+	m_plugin->m_perforceExecutable = "/home/mvo/src/kdev-perforce/build/p4clientstub/p4clientstub";
     removeTempDirsIfAny();
     createNewTempDirs();
 }
@@ -72,7 +69,7 @@ void PerforcePluginTest::createNewTempDirs()
      // Now create the basic directory structure
     QDir tmpdir(tempDir);
     tmpdir.mkdir(perforceTestBaseDir);
-    //we start it after repoInit, so we still have empty git repo
+    //we start it after repoInit, so we still have empty repo
     QFile f(perforceTestBaseDir + perforceConfigFileName);
     
     if (f.open(QIODevice::WriteOnly)) {
@@ -108,79 +105,15 @@ void PerforcePluginTest::cleanup()
     removeTempDirsIfAny();
 }
 
-void PerforcePluginTest::testAdd()
+void PerforcePluginTest::testStatus()
 {
-    kDebug() << "Adding files to the repo";
-    
-    //we start it after repoInit, so we still have empty git repo
-    QFile f(perforceTestBaseDir + perforceTest_FileName);
-    
-    if (f.open(QIODevice::WriteOnly)) {
-	QTextStream input(&f);
-	input << "HELLO WORLD";
-    }
-    
-    f.close();
-    f.setFileName(perforceTestBaseDir + perforceTest_FileName2);
-    
-    if (f.open(QIODevice::WriteOnly)) {
-	QTextStream input(&f);
-	input << "No, bar()!";
-    }
-    
-    f.close();
-    
-    //test git-status exitCode (see DVcsJob::setExitCode).
     KDevelop::VcsJob* j = m_plugin->status(KUrl::List(perforceTestBaseDir));
     VERIFYJOB(j);
-    
-    // /tmp/kdevGit_testdir/ and testfile
-    j = m_plugin->add(KUrl::List(perforceTestBaseDir + perforceTest_FileName));
-    VERIFYJOB(j);
-    
-    f.setFileName(perforceSrcDir + perforceTest_FileName3);
-    
-    if (f.open(QIODevice::WriteOnly)) {
-	QTextStream input(&f);
-	input << "No, foo()! It's bar()!";
-    }
-    
-    f.close();
-    
-    //test git-status exitCode again
-    j = m_plugin->status(KUrl::List(perforceTestBaseDir));
-    VERIFYJOB(j);
-    
-    //repository path without trailing slash and a file in a parent directory
-    // /tmp/repo  and /tmp/repo/src/bar
-    j = m_plugin->add(KUrl::List(QStringList(perforceSrcDir + perforceTest_FileName3)));
-    VERIFYJOB(j);
-    
-    //let's use absolute path, because it's used in ContextMenus
-    j = m_plugin->add(KUrl::List(QStringList(perforceTestBaseDir + perforceTest_FileName2)));
-    VERIFYJOB(j);
-    
-    //Now let's create several files and try "git add file1 file2 file3"
-    f.setFileName(perforceTestBaseDir + "file1");
-    
-    if (f.open(QIODevice::WriteOnly)) {
-	QTextStream input(&f);
-	input << "file1";
-    }
-    
-    f.close();
-    f.setFileName(perforceTestBaseDir + "file2");
-    
-    if (f.open(QIODevice::WriteOnly)) {
-	QTextStream input(&f);
-	input << "file2";
-    }
-    f.close();
-    
-    KUrl::List multipleFiles;
-    multipleFiles << (perforceTestBaseDir + "file1");
-    multipleFiles << (perforceTestBaseDir + "file2");
-    j = m_plugin->add(multipleFiles);
+}
+
+void PerforcePluginTest::testAdd()
+{
+    KDevelop::VcsJob* j = m_plugin->add(KUrl::List(perforceTestBaseDir));
     VERIFYJOB(j);
 }
 

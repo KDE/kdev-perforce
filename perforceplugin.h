@@ -44,14 +44,15 @@ namespace KDevelop
 }
 
 
-class perforceplugin : public KDevelop::IPlugin, public KDevelop::ICentralizedVersionControl
+class PerforcePlugin : public KDevelop::IPlugin, public KDevelop::ICentralizedVersionControl
 {
   Q_OBJECT
   Q_INTERFACES(KDevelop::IBasicVersionControl KDevelop::ICentralizedVersionControl)
 
+  friend class PerforcePluginTest;
 public:
-  perforceplugin(QObject* parent, const QVariantList & = QVariantList()); 
-  virtual ~perforceplugin();
+  PerforcePlugin(QObject* parent, const QVariantList & = QVariantList()); 
+  virtual ~PerforcePlugin();
   
   //@{
   /** Methods inherited from KDevelop::IBasicVersionControl */
@@ -170,6 +171,7 @@ private:
     std::auto_ptr<KDevelop::VcsPluginHelper> m_common;
     QMenu* m_perforcemenu;
     QString m_perforceConfigName;
+	QString m_perforceExecutable;
     KAction* m_edit_action;
 
     bool m_hasError;

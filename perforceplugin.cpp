@@ -65,14 +65,15 @@ namespace
  * 4) Implement some unittests 
  */
 
-K_PLUGIN_FACTORY (KdevPerforceFactory, registerPlugin<perforceplugin>();)
+K_PLUGIN_FACTORY (KdevPerforceFactory, registerPlugin<PerforcePlugin>();)
 K_EXPORT_PLUGIN (KdevPerforceFactory (KAboutData ("kdevperforce","kdevperforce", ki18n ("Perforce"), "0.1", ki18n ("Support for Perforce Version Control System"), KAboutData::License_GPL)))
 
-perforceplugin::perforceplugin(QObject* parent, const QVariantList& ):
+PerforcePlugin::PerforcePlugin(QObject* parent, const QVariantList& ):
         KDevelop::IPlugin(KdevPerforceFactory::componentData(), parent )
         , m_common(new KDevelop::VcsPluginHelper(this, this))
         , m_perforcemenu( 0 )
         , m_perforceConfigName("p4config.txt")
+		, m_perforceExecutable("p4")
         , m_edit_action( 0 )
 	, m_hasError(true)
 {
@@ -96,21 +97,21 @@ perforceplugin::perforceplugin(QObject* parent, const QVariantList& ):
 
 }
 
-perforceplugin::~perforceplugin()
+PerforcePlugin::~PerforcePlugin()
 {
 }
 
-QString perforceplugin::name() const
+QString PerforcePlugin::name() const
 {
     return i18n("Perforce");
 }
 
-KDevelop::VcsImportMetadataWidget* perforceplugin::createImportMetadataWidget(QWidget* /*parent*/)
+KDevelop::VcsImportMetadataWidget* PerforcePlugin::createImportMetadataWidget(QWidget* /*parent*/)
 {
     return 0;
 }
 
-bool perforceplugin::isValidDirectory(const KUrl & dirPath)
+bool PerforcePlugin::isValidDirectory(const KUrl & dirPath)
 {
     const QFileInfo finfo(dirPath.toLocalFile());
     QDir dir = finfo.isDir() ? QDir(dirPath.toLocalFile()) : finfo.absoluteDir();
@@ -126,7 +127,7 @@ bool perforceplugin::isValidDirectory(const KUrl & dirPath)
     return false;
 }
 
-bool perforceplugin::isVersionControlled(const KUrl& localLocation)
+bool PerforcePlugin::isVersionControlled(const KUrl& localLocation)
 {
     QFileInfo fsObject(localLocation.toLocalFile());
     if (fsObject.isDir())
@@ -136,15 +137,15 @@ bool perforceplugin::isVersionControlled(const KUrl& localLocation)
     return parseP4fstat(fsObject, KDevelop::OutputJob::Silent);
 }
 
-DVcsJob* perforceplugin::p4fstatJob(const QFileInfo& curFile, OutputJob::OutputJobVerbosity verbosity)
+DVcsJob* PerforcePlugin::p4fstatJob(const QFileInfo& curFile, OutputJob::OutputJobVerbosity verbosity)
 {
     DVcsJob* job = new DVcsJob(curFile.absolutePath(), this, verbosity);
     setEnvironmentForJob(job, curFile);
-    *job << "p4" << "fstat" << curFile.fileName();
+    *job << m_perforceExecutable << "fstat" << curFile.fileName();
     return job;
 }
 
-bool perforceplugin::parseP4fstat(const QFileInfo& curFile, OutputJob::OutputJobVerbosity verbosity)
+bool PerforcePlugin::parseP4fstat(const QFileInfo& curFile, OutputJob::OutputJobVerbosity verbosity)
 {
     QScopedPointer<DVcsJob> job(p4fstatJob(curFile, verbosity));
     if (job->exec() && job->status() == KDevelop::VcsJob::JobSucceeded)
@@ -156,7 +157,7 @@ bool perforceplugin::parseP4fstat(const QFileInfo& curFile, OutputJob::OutputJob
     return false;
 }
 
-QString perforceplugin::getRepositoryName(const QFileInfo& curFile)
+QString PerforcePlugin::getRepositoryName(const QFileInfo& curFile)
 {
     QString ret;
     QScopedPointer<DVcsJob> job(p4fstatJob(curFile, KDevelop::OutputJob::Silent));
@@ -180,37 +181,37 @@ QString perforceplugin::getRepositoryName(const QFileInfo& curFile)
     return ret; 
 }
 
-KDevelop::VcsJob* perforceplugin::repositoryLocation(const KUrl& /*localLocation*/)
+KDevelop::VcsJob* PerforcePlugin::repositoryLocation(const KUrl& /*localLocation*/)
 {
     return 0;
 }
 
-KDevelop::VcsJob* perforceplugin::add(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
+KDevelop::VcsJob* PerforcePlugin::add(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     QFileInfo curFile(localLocations.front().toLocalFile());
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << "p4" << "add" << localLocations;
+    *job << m_perforceExecutable << "add" << localLocations;
 
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::remove(const KUrl::List& /*localLocations*/)
+KDevelop::VcsJob* PerforcePlugin::remove(const KUrl::List& /*localLocations*/)
 {
     return 0;
 }
 
-KDevelop::VcsJob* perforceplugin::copy(const KUrl& /*localLocationSrc*/, const KUrl& /*localLocationDstn*/)
+KDevelop::VcsJob* PerforcePlugin::copy(const KUrl& /*localLocationSrc*/, const KUrl& /*localLocationDstn*/)
 {
     return 0;
 }
 
-KDevelop::VcsJob* perforceplugin::move(const KUrl& /*localLocationSrc*/, const KUrl& /*localLocationDst*/)
+KDevelop::VcsJob* PerforcePlugin::move(const KUrl& /*localLocationSrc*/, const KUrl& /*localLocationDst*/)
 {
     return 0;
 }
 
-KDevelop::VcsJob* perforceplugin::status(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
+KDevelop::VcsJob* PerforcePlugin::status(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     if (localLocations.count() != 1)
     {
@@ -222,13 +223,13 @@ KDevelop::VcsJob* perforceplugin::status(const KUrl::List& localLocations, KDeve
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << "p4" << "fstat" << curFile.fileName();
+    *job << m_perforceExecutable << "fstat" << curFile.fileName();
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4StatusOutput(KDevelop::DVcsJob*)));
 
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::revert(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
+KDevelop::VcsJob* PerforcePlugin::revert(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     if (localLocations.count() != 1)
     {
@@ -240,29 +241,29 @@ KDevelop::VcsJob* perforceplugin::revert(const KUrl::List& localLocations, KDeve
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << "p4" << "revert" << curFile.fileName();
+    *job << m_perforceExecutable << "revert" << curFile.fileName();
 
     return job;
 
 }
 
-KDevelop::VcsJob* perforceplugin::update(const KUrl::List& localLocations, const KDevelop::VcsRevision& /*rev*/, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
+KDevelop::VcsJob* PerforcePlugin::update(const KUrl::List& localLocations, const KDevelop::VcsRevision& /*rev*/, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     QFileInfo curFile(localLocations.front().toLocalFile());
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    //*job << "p4" << "-p" << "127.0.0.1:1666" << "info"; - Let's keep this for now it's very handy for debugging
+    //*job << m_perforceExecutable << "-p" << "127.0.0.1:1666" << "info"; - Let's keep this for now it's very handy for debugging
     QString fileOrDirectory;
     if(curFile.isDir())
 	fileOrDirectory = curFile.absolutePath() + "/...";
     else
 	fileOrDirectory = curFile.fileName();
-    *job << "p4" << "sync" << fileOrDirectory;
+    *job << m_perforceExecutable << "sync" << fileOrDirectory;
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::commit(const QString& message, const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
+KDevelop::VcsJob* PerforcePlugin::commit(const QString& message, const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     if (localLocations.empty() || message.isEmpty())
         return errorsFound(i18n("No files or message specified"));
@@ -272,12 +273,12 @@ KDevelop::VcsJob* perforceplugin::commit(const QString& message, const KUrl::Lis
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << "p4" << "submit" << "-d" << message << localLocations;
+    *job << m_perforceExecutable << "submit" << "-d" << message << localLocations;
 
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::diff(const KUrl& fileOrDirectory, const KDevelop::VcsRevision& srcRevision, const KDevelop::VcsRevision& dstRevision, KDevelop::VcsDiff::Type , KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
+KDevelop::VcsJob* PerforcePlugin::diff(const KUrl& fileOrDirectory, const KDevelop::VcsRevision& srcRevision, const KDevelop::VcsRevision& dstRevision, KDevelop::VcsDiff::Type , KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     QFileInfo curFile(fileOrDirectory.toLocalFile());
     QString depotSrcFileName = getRepositoryName(curFile);
@@ -330,13 +331,13 @@ KDevelop::VcsJob* perforceplugin::diff(const KUrl& fileOrDirectory, const KDevel
 	case VcsRevision::GlobalNumber:
 	    depotDstFileName.append("#");
 	    depotDstFileName.append(dstRevision.prettyValue());
-	    *job << "p4" << "diff2" << "-u" << depotSrcFileName << depotDstFileName;
+	    *job << m_perforceExecutable << "diff2" << "-u" << depotSrcFileName << depotDstFileName;
 	    break;
 	case VcsRevision::Special:
 	    switch(dstRevision.revisionValue().value<VcsRevision::RevisionSpecialType>()) 
 	    {
 		case VcsRevision::Working:
-		    *job << "p4" << "diff" << "-du" << depotSrcFileName;
+		    *job << m_perforceExecutable << "diff" << "-du" << depotSrcFileName;
 		    break;
 		case VcsRevision::Start:
 		case VcsRevision::UserSpecialType:
@@ -354,18 +355,18 @@ KDevelop::VcsJob* perforceplugin::diff(const KUrl& fileOrDirectory, const KDevel
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::log(const KUrl& localLocation, const KDevelop::VcsRevision& /*rev*/, long unsigned int /*limit*/)
+KDevelop::VcsJob* PerforcePlugin::log(const KUrl& localLocation, const KDevelop::VcsRevision& /*rev*/, long unsigned int /*limit*/)
 {
     QFileInfo curFile(localLocation.toLocalFile());
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << "p4" << "filelog" << "-l" << localLocation;
+    *job << m_perforceExecutable << "filelog" << "-l" << localLocation;
 
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4LogOutput(KDevelop::DVcsJob*)));
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::log(const KUrl& localLocation, const KDevelop::VcsRevision& /*rev*/, const KDevelop::VcsRevision& /*limit*/)
+KDevelop::VcsJob* PerforcePlugin::log(const KUrl& localLocation, const KDevelop::VcsRevision& /*rev*/, const KDevelop::VcsRevision& /*limit*/)
 {
     QFileInfo curFile(localLocation.toLocalFile());
     if (curFile.isDir())
@@ -376,13 +377,13 @@ KDevelop::VcsJob* perforceplugin::log(const KUrl& localLocation, const KDevelop:
     
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << "p4" << "filelog" << "-lt" << localLocation;
+    *job << m_perforceExecutable << "filelog" << "-lt" << localLocation;
     
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4LogOutput(KDevelop::DVcsJob*)));
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::annotate(const KUrl& localLocation, const KDevelop::VcsRevision& /*rev*/)
+KDevelop::VcsJob* PerforcePlugin::annotate(const KUrl& localLocation, const KDevelop::VcsRevision& /*rev*/)
 {
     QFileInfo curFile(localLocation.toLocalFile());
     if (curFile.isDir())
@@ -393,55 +394,55 @@ KDevelop::VcsJob* perforceplugin::annotate(const KUrl& localLocation, const KDev
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << "p4" << "annotate" << "-q" << localLocation;
+    *job << m_perforceExecutable << "annotate" << "-q" << localLocation;
     
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4AnnotateOutput(KDevelop::DVcsJob*)));
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::resolve(const KUrl::List& /*localLocations*/, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
+KDevelop::VcsJob* PerforcePlugin::resolve(const KUrl::List& /*localLocations*/, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     return 0;
 }
 
-KDevelop::VcsJob* perforceplugin::createWorkingCopy(const KDevelop::VcsLocation& /*sourceRepository*/, const KUrl& /*destinationDirectory*/, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
+KDevelop::VcsJob* PerforcePlugin::createWorkingCopy(const KDevelop::VcsLocation& /*sourceRepository*/, const KUrl& /*destinationDirectory*/, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     return 0;
 }
 
-KDevelop::VcsLocationWidget* perforceplugin::vcsLocation(QWidget* parent) const
+KDevelop::VcsLocationWidget* PerforcePlugin::vcsLocation(QWidget* parent) const
 {
     return new StandardVcsLocationWidget(parent);
 }
 
 
-KDevelop::VcsJob* perforceplugin::edit(const KUrl& localLocation)
+KDevelop::VcsJob* PerforcePlugin::edit(const KUrl& localLocation)
 {
     QFileInfo curFile(localLocation.toLocalFile());
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << "p4" << "edit" << curFile.fileName();
+    *job << m_perforceExecutable << "edit" << curFile.fileName();
 
     return job;
 }
 
-KDevelop::VcsJob* perforceplugin::unedit(const KUrl& /*localLocation*/)
+KDevelop::VcsJob* PerforcePlugin::unedit(const KUrl& /*localLocation*/)
 {
     return 0;
 }
 
-KDevelop::VcsJob* perforceplugin::localRevision(const KUrl& /*localLocation*/, KDevelop::VcsRevision::RevisionType )
+KDevelop::VcsJob* PerforcePlugin::localRevision(const KUrl& /*localLocation*/, KDevelop::VcsRevision::RevisionType )
 {
     return 0;
 }
 
-KDevelop::VcsJob* perforceplugin::import(const QString& /*commitMessage*/, const KUrl& /*sourceDirectory*/, const KDevelop::VcsLocation& /*destinationRepository*/)
+KDevelop::VcsJob* PerforcePlugin::import(const QString& /*commitMessage*/, const KUrl& /*sourceDirectory*/, const KDevelop::VcsLocation& /*destinationRepository*/)
 {
     return 0;
 }
 
-KDevelop::ContextMenuExtension perforceplugin::contextMenuExtension(KDevelop::Context* context)
+KDevelop::ContextMenuExtension PerforcePlugin::contextMenuExtension(KDevelop::Context* context)
 {
     m_common->setupFromContext(context);
 
@@ -479,7 +480,7 @@ KDevelop::ContextMenuExtension perforceplugin::contextMenuExtension(KDevelop::Co
     return menuExt;
 }
 
-void perforceplugin::ctxEdit()
+void PerforcePlugin::ctxEdit()
 {
     KUrl::List const & ctxUrlList = m_common->contextUrlList();
     if (ctxUrlList.count() != 1)
@@ -491,7 +492,7 @@ void perforceplugin::ctxEdit()
     KDevelop::ICore::self()->runController()->registerJob(edit(source));
 }
 
-void perforceplugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile)
+void PerforcePlugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile)
 {
     KProcess* jobproc = job->process();
     //QStringList beforeEnv = jobproc->environment();
@@ -502,7 +503,7 @@ void perforceplugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile
     //kDebug() << "After setting the environment : " << afterEnv;
 }
 
-QList<QVariant> perforceplugin::getQvariantFromLogOutput(QStringList const& outputLines )
+QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outputLines )
 {
     QList<QVariant> commits;
     VcsEvent item;
@@ -551,9 +552,11 @@ QList<QVariant> perforceplugin::getQvariantFromLogOutput(QStringList const& outp
 }
 
 
-void perforceplugin::parseP4StatusOutput(DVcsJob* job)
+void PerforcePlugin::parseP4StatusOutput(DVcsJob* job)
 {
     QStringList outputLines = job->output().split('\n', QString::SkipEmptyParts);
+    kDebug() << "Perforce returned: " << job->output();
+
     //KUrl fileUrl = job->directory().absolutePath();
     QVariantList statuses;
     QList<KUrl> processedFiles;
@@ -595,14 +598,14 @@ void perforceplugin::parseP4StatusOutput(DVcsJob* job)
     job->setResults(statuses);
 }
 
-void perforceplugin::parseP4LogOutput(KDevelop::DVcsJob* job)
+void PerforcePlugin::parseP4LogOutput(KDevelop::DVcsJob* job)
 {
     QList<QVariant> commits(getQvariantFromLogOutput(job->output().split('\n', QString::SkipEmptyParts)));
     
     job->setResults(commits);
 }
 
-void perforceplugin::parseP4DiffOutput(DVcsJob* job)
+void PerforcePlugin::parseP4DiffOutput(DVcsJob* job)
 {
     VcsDiff diff;
     diff.setDiff(job->output());
@@ -623,7 +626,7 @@ void perforceplugin::parseP4DiffOutput(DVcsJob* job)
     job->setResults(qVariantFromValue(diff));
 }
 
-void perforceplugin::parseP4AnnotateOutput(DVcsJob *job)
+void PerforcePlugin::parseP4AnnotateOutput(DVcsJob *job)
 {
     QVariantList results;
     QList<QVariant> commits;
@@ -634,7 +637,7 @@ void perforceplugin::parseP4AnnotateOutput(DVcsJob *job)
     QScopedPointer<DVcsJob> logJob(new DVcsJob(job->directory(), this, OutputJob::Silent));
     QFileInfo curFile(localLocation.toLocalFile());
     setEnvironmentForJob(logJob.data(), curFile);
-    *logJob << "p4" << "filelog" << "-lt" << localLocation;
+    *logJob << m_perforceExecutable << "filelog" << "-lt" << localLocation;
 	       
     if (logJob->exec() && logJob->status() == KDevelop::VcsJob::JobSucceeded)
     {
@@ -688,19 +691,19 @@ void perforceplugin::parseP4AnnotateOutput(DVcsJob *job)
 }
 
 
-KDevelop::VcsJob* perforceplugin::errorsFound(const QString& error, KDevelop::OutputJob::OutputJobVerbosity verbosity)
+KDevelop::VcsJob* PerforcePlugin::errorsFound(const QString& error, KDevelop::OutputJob::OutputJobVerbosity verbosity)
 {
     DVcsJob* j = new DVcsJob(QDir::temp(), this, verbosity);
     *j << "echo" << i18n("error: %1", error) << "-n";
     return j;
 }
 
-bool perforceplugin::hasError() const
+bool PerforcePlugin::hasError() const
 {
     return m_hasError;
 }
 
-QString perforceplugin::errorDescription() const
+QString PerforcePlugin::errorDescription() const
 {
     return m_errorDescription;
 }

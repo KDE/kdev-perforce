@@ -24,7 +24,7 @@
 
 #include <QtCore/QObject>
 
-class perforceplugin;
+class PerforcePlugin;
 
 namespace KDevelop
 {
@@ -38,8 +38,9 @@ private slots:
     void init();
     void cleanup();
     void testAdd();
+    void testStatus();
 private:
-    perforceplugin* m_plugin;
+    PerforcePlugin* m_plugin;
     KDevelop::TestCore* m_core;
     void removeTempDirsIfAny();
     void createNewTempDirs();

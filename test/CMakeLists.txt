@@ -1,3 +1,5 @@
+# Running the test only makes sense if the perforce command line client
+# is present. So check for it before adding the test...
 set( perforceplugintest_SRCS
      perforceplugintest.cpp
      ../perforceplugin.cpp
