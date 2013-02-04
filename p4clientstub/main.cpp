@@ -82,8 +82,17 @@ int fakeAnnotateOutput()
 	return 0;
 }
 
-int fakeEditOutput()
+int fakeEditOutput(QString const& filepath)
 {
+	std::string fileText = filepath.toUtf8().constData();
+	std::cout << fileText << "#1 - opened for edit" << std::endl;
+	return 0;
+}
+
+int fakeAddOutput(QString const& filepath)
+{
+	std::string fileText = filepath.toUtf8().constData();
+	std::cout << fileText << "#1 - opened for add" << std::endl;
 	return 0;
 }
 
@@ -109,9 +118,11 @@ int main(int argc, char** argv)
 	} else if(qstrcmp(argv[1], "annotate") == 0) {
 		return fakeAnnotateOutput();
 	} else if(qstrcmp(argv[1], "edit") == 0) {
-		return fakeEditOutput();
+		return fakeEditOutput(QString(argv[2]));
 	} else if(qstrcmp(argv[1], "fstat") == 0) {
 		return fakeFstatOutput(QString(argv[2]));
+	} else if(qstrcmp(argv[1], "add") == 0) {
+		return fakeAddOutput(QString(argv[2]));
 	} 
  	return -1;
 }

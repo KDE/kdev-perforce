@@ -38,6 +38,7 @@ private slots:
     void init();
     void cleanup();
     void testAdd();
+    void testEdit();
     void testStatus();
 private:
     PerforcePlugin* m_plugin;

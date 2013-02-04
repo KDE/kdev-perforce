@@ -58,8 +58,8 @@ void PerforcePluginTest::init()
     m_core = new KDevelop::TestCore();
     m_core->initialize( KDevelop::Core::NoUi );
     m_plugin = new PerforcePlugin(m_core);
-	/// TODO: FIND OUT HOW WE CAN MAKE THE SETUP OF OUR BUILD RESOLVE THIS 
-	m_plugin->m_perforceExecutable = "/home/mvo/src/kdev-perforce/build/p4clientstub/p4clientstub";
+	/// During test we are setting the executable the plugin uses to our own stub
+	m_plugin->m_perforceExecutable = P4_CLIENT_STUB_EXE;
     removeTempDirsIfAny();
     createNewTempDirs();
 }
@@ -105,16 +105,23 @@ void PerforcePluginTest::cleanup()
     removeTempDirsIfAny();
 }
 
+void PerforcePluginTest::testAdd()
+{
+    KDevelop::VcsJob* j = m_plugin->add(KUrl::List(perforceTestBaseDir));
+    VERIFYJOB(j);
+}
+
+void PerforcePluginTest::testEdit()
+{
+    KDevelop::VcsJob* j = m_plugin->edit(KUrl(perforceTestBaseDir));
+    VERIFYJOB(j);
+}
+
 void PerforcePluginTest::testStatus()
 {
     KDevelop::VcsJob* j = m_plugin->status(KUrl::List(perforceTestBaseDir));
     VERIFYJOB(j);
 }
 
-void PerforcePluginTest::testAdd()
-{
-    KDevelop::VcsJob* j = m_plugin->add(KUrl::List(perforceTestBaseDir));
-    VERIFYJOB(j);
-}
 
 QTEST_KDEMAIN(PerforcePluginTest, GUI)
