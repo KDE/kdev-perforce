@@ -56,15 +56,6 @@ namespace
   const QString LOGENTRY_START("... #");
 }
 
-/* Todo:
- *
- * 
- * 1) Add a Installation instructions file and a README - Done
- * 2) Use a namespace
- * 3) Unify the way errors are handled.
- * 4) Implement some unittests 
- */
-
 K_PLUGIN_FACTORY (KdevPerforceFactory, registerPlugin<PerforcePlugin>();)
 K_EXPORT_PLUGIN (KdevPerforceFactory (KAboutData ("kdevperforce","kdevperforce", ki18n ("Perforce"), "0.1", ki18n ("Support for Perforce Version Control System"), KAboutData::License_GPL)))
 
