@@ -28,7 +28,7 @@ class PerforcePlugin;
 
 namespace KDevelop
 {
-    class TestCore;
+class TestCore;
 }
 
 class PerforcePluginTest : public QObject
@@ -40,12 +40,12 @@ private slots:
     void testAdd();
     void testEdit();
     void testStatus();
-	void testAnnotate();
-	void testHistory();
-	void testRevert();
-	void testUpdateFile();
-	void testUpdateDir();
-	void testCommit();
+    void testAnnotate();
+    void testHistory();
+    void testRevert();
+    void testUpdateFile();
+    void testUpdateDir();
+    void testCommit();
 private:
     PerforcePlugin* m_plugin;
     KDevelop::TestCore* m_core;

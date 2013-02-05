@@ -40,12 +40,12 @@
 #include <perforceplugin.h>
 
 #define VERIFYJOB(j) \
-QVERIFY(j); QVERIFY(j->exec()); QVERIFY((j)->status() == KDevelop::VcsJob::JobSucceeded)
+    QVERIFY(j); QVERIFY(j->exec()); QVERIFY((j)->status() == KDevelop::VcsJob::JobSucceeded)
 
 const QString tempDir = QDir::tempPath();
 const QString perforceTestBaseDir(tempDir + "/kdevPerforce_testdir/");
 const QString perforceTestBaseDir2(tempDir + "/kdevPerforce_testdir2/");
-const QString perforceConfigFileName( "p4config.txt" );
+const QString perforceConfigFileName("p4config.txt");
 
 const QString perforceSrcDir(perforceTestBaseDir + "src/");
 const QString perforceTest_FileName("testfile");
@@ -56,34 +56,34 @@ void PerforcePluginTest::init()
 {
     KDevelop::AutoTestShell::init();
     m_core = new KDevelop::TestCore();
-    m_core->initialize( KDevelop::Core::NoUi );
+    m_core->initialize(KDevelop::Core::NoUi);
     m_plugin = new PerforcePlugin(m_core);
-	/// During test we are setting the executable the plugin uses to our own stub
-	m_plugin->m_perforceExecutable = P4_CLIENT_STUB_EXE;
+    /// During test we are setting the executable the plugin uses to our own stub
+    m_plugin->m_perforceExecutable = P4_CLIENT_STUB_EXE;
     removeTempDirsIfAny();
     createNewTempDirs();
 }
 
 void PerforcePluginTest::createNewTempDirs()
 {
-     // Now create the basic directory structure
+    // Now create the basic directory structure
     QDir tmpdir(tempDir);
     tmpdir.mkdir(perforceTestBaseDir);
     //we start it after repoInit, so we still have empty repo
     QFile f(perforceTestBaseDir + perforceConfigFileName);
     if (f.open(QIODevice::WriteOnly)) {
-	QTextStream input(&f);
-	input << "P4PORT=127.0.0.1:1666\n";
-	input << "P4USER=mvo\n";
-	input << "P4CLIENT=testbed\n";
+        QTextStream input(&f);
+        input << "P4PORT=127.0.0.1:1666\n";
+        input << "P4USER=mvo\n";
+        input << "P4CLIENT=testbed\n";
     }
     f.close();
-	
+
     //Put a file here because the annotate and update function will check for that
     QFile g(perforceTestBaseDir + perforceTest_FileName);
     if (g.open(QIODevice::WriteOnly)) {
-		QTextStream input(&g);
-		input << "HELLO WORLD";
+        QTextStream input(&g);
+        input << "HELLO WORLD";
     }
     g.close();
 
@@ -162,7 +162,7 @@ void PerforcePluginTest::testUpdateDir()
 
 void PerforcePluginTest::testCommit()
 {
-	QString commitMsg("this is the commit message");
+    QString commitMsg("this is the commit message");
     KDevelop::VcsJob* j = m_plugin->commit(commitMsg, KUrl(perforceTestBaseDir));
     VERIFYJOB(j);
 }

@@ -38,140 +38,140 @@ class QDir;
 
 namespace KDevelop
 {
-  class ContextMenuExtension;
-  class VcsPluginHelper;
-  class DVcsJob;
+class ContextMenuExtension;
+class VcsPluginHelper;
+class DVcsJob;
 }
 
 
 class PerforcePlugin : public KDevelop::IPlugin, public KDevelop::ICentralizedVersionControl
 {
-  Q_OBJECT
-  Q_INTERFACES(KDevelop::IBasicVersionControl KDevelop::ICentralizedVersionControl)
+    Q_OBJECT
+    Q_INTERFACES(KDevelop::IBasicVersionControl KDevelop::ICentralizedVersionControl)
 
-  friend class PerforcePluginTest;
+    friend class PerforcePluginTest;
 public:
-  PerforcePlugin(QObject* parent, const QVariantList & = QVariantList()); 
-  virtual ~PerforcePlugin();
-  
-  //@{
-  /** Methods inherited from KDevelop::IBasicVersionControl */
-  QString name() const;
-  
-  KDevelop::VcsImportMetadataWidget* createImportMetadataWidget( QWidget* parent );
-  
-  bool isVersionControlled(const KUrl& localLocation);
-  
-  KDevelop::VcsJob* repositoryLocation(const KUrl& localLocation);
-  
-  KDevelop::VcsJob* add( const KUrl::List& localLocations,
-                         RecursionMode recursion = IBasicVersionControl::Recursive );
-  KDevelop::VcsJob* remove( const KUrl::List& localLocations );
+    PerforcePlugin(QObject* parent, const QVariantList & = QVariantList());
+    virtual ~PerforcePlugin();
 
-  KDevelop::VcsJob* copy( const KUrl& localLocationSrc,
-                          const KUrl& localLocationDstn );
-  KDevelop::VcsJob* move( const KUrl& localLocationSrc,
-                          const KUrl& localLocationDst );
-  KDevelop::VcsJob* status( const KUrl::List& localLocations,
-                            RecursionMode recursion = IBasicVersionControl::Recursive );
+    //@{
+    /** Methods inherited from KDevelop::IBasicVersionControl */
+    QString name() const;
 
-  KDevelop::VcsJob* revert( const KUrl::List& localLocations,
-                            RecursionMode recursion = IBasicVersionControl::Recursive );
+    KDevelop::VcsImportMetadataWidget* createImportMetadataWidget(QWidget* parent);
 
-  KDevelop::VcsJob* update( const KUrl::List& localLocations,
-                            const KDevelop::VcsRevision& rev = KDevelop::VcsRevision::createSpecialRevision( KDevelop::VcsRevision::Head ),
-                            KDevelop::IBasicVersionControl::RecursionMode recursion = KDevelop::IBasicVersionControl::Recursive );
+    bool isVersionControlled(const KUrl& localLocation);
 
-  KDevelop::VcsJob* commit( const QString& message,
-                            const KUrl::List& localLocations,
-                            KDevelop::IBasicVersionControl::RecursionMode recursion = KDevelop::IBasicVersionControl::Recursive );
+    KDevelop::VcsJob* repositoryLocation(const KUrl& localLocation);
 
-  KDevelop::VcsJob* diff( const KUrl& fileOrDirectory,
-                          const KDevelop::VcsRevision& srcRevision,
-                          const KDevelop::VcsRevision& dstRevision,
-                          KDevelop::VcsDiff::Type = KDevelop::VcsDiff::DiffUnified,
-                          KDevelop::IBasicVersionControl::RecursionMode recursion = KDevelop::IBasicVersionControl::Recursive );
+    KDevelop::VcsJob* add(const KUrl::List& localLocations,
+                          RecursionMode recursion = IBasicVersionControl::Recursive);
+    KDevelop::VcsJob* remove(const KUrl::List& localLocations);
 
-  KDevelop::VcsJob* log( const KUrl& localLocation,
-                         const KDevelop::VcsRevision& rev,
-                         unsigned long limit = 0 );
+    KDevelop::VcsJob* copy(const KUrl& localLocationSrc,
+                           const KUrl& localLocationDstn);
+    KDevelop::VcsJob* move(const KUrl& localLocationSrc,
+                           const KUrl& localLocationDst);
+    KDevelop::VcsJob* status(const KUrl::List& localLocations,
+                             RecursionMode recursion = IBasicVersionControl::Recursive);
 
-  KDevelop::VcsJob* log( const KUrl& localLocation,
-                         const KDevelop::VcsRevision& rev = KDevelop::VcsRevision::createSpecialRevision( KDevelop::VcsRevision::Base ),
-                         const KDevelop::VcsRevision& limit= KDevelop::VcsRevision::createSpecialRevision( KDevelop::VcsRevision::Start ) );
+    KDevelop::VcsJob* revert(const KUrl::List& localLocations,
+                             RecursionMode recursion = IBasicVersionControl::Recursive);
 
-  KDevelop::VcsJob* annotate( const KUrl& localLocation,
-                              const KDevelop::VcsRevision& rev = KDevelop::VcsRevision::createSpecialRevision( KDevelop::VcsRevision::Head ) );
+    KDevelop::VcsJob* update(const KUrl::List& localLocations,
+                             const KDevelop::VcsRevision& rev = KDevelop::VcsRevision::createSpecialRevision(KDevelop::VcsRevision::Head),
+                             KDevelop::IBasicVersionControl::RecursionMode recursion = KDevelop::IBasicVersionControl::Recursive);
 
-  KDevelop::VcsJob* resolve( const KUrl::List& localLocations,
-                             KDevelop::IBasicVersionControl::RecursionMode recursion );
+    KDevelop::VcsJob* commit(const QString& message,
+                             const KUrl::List& localLocations,
+                             KDevelop::IBasicVersionControl::RecursionMode recursion = KDevelop::IBasicVersionControl::Recursive);
 
-  KDevelop::VcsJob* createWorkingCopy(const  KDevelop::VcsLocation & sourceRepository, 
-                                      const KUrl & destinationDirectory, 
-                                      KDevelop::IBasicVersionControl::RecursionMode recursion = IBasicVersionControl::Recursive);
+    KDevelop::VcsJob* diff(const KUrl& fileOrDirectory,
+                           const KDevelop::VcsRevision& srcRevision,
+                           const KDevelop::VcsRevision& dstRevision,
+                           KDevelop::VcsDiff::Type = KDevelop::VcsDiff::DiffUnified,
+                           KDevelop::IBasicVersionControl::RecursionMode recursion = KDevelop::IBasicVersionControl::Recursive);
 
-    
-  KDevelop::VcsLocationWidget* vcsLocation(QWidget* parent) const;  
-  //@}
-  
-  //@{
-  /** Methods inherited from KDevelop::ICentralizedVersionControl  */
-    KDevelop::VcsJob* edit( const KUrl& localLocation );
+    KDevelop::VcsJob* log(const KUrl& localLocation,
+                          const KDevelop::VcsRevision& rev,
+                          unsigned long limit = 0);
 
-    KDevelop::VcsJob* unedit( const KUrl& localLocation );
+    KDevelop::VcsJob* log(const KUrl& localLocation,
+                          const KDevelop::VcsRevision& rev = KDevelop::VcsRevision::createSpecialRevision(KDevelop::VcsRevision::Base),
+                          const KDevelop::VcsRevision& limit = KDevelop::VcsRevision::createSpecialRevision(KDevelop::VcsRevision::Start));
 
-    KDevelop::VcsJob* localRevision( const KUrl& localLocation,
-                                    KDevelop::VcsRevision::RevisionType );
+    KDevelop::VcsJob* annotate(const KUrl& localLocation,
+                               const KDevelop::VcsRevision& rev = KDevelop::VcsRevision::createSpecialRevision(KDevelop::VcsRevision::Head));
 
-    KDevelop::VcsJob* import(const QString & commitMessage, 
-                             const KUrl & sourceDirectory, 
+    KDevelop::VcsJob* resolve(const KUrl::List& localLocations,
+                              KDevelop::IBasicVersionControl::RecursionMode recursion);
+
+    KDevelop::VcsJob* createWorkingCopy(const  KDevelop::VcsLocation & sourceRepository,
+                                        const KUrl & destinationDirectory,
+                                        KDevelop::IBasicVersionControl::RecursionMode recursion = IBasicVersionControl::Recursive);
+
+
+    KDevelop::VcsLocationWidget* vcsLocation(QWidget* parent) const;
+    //@}
+
+    //@{
+    /** Methods inherited from KDevelop::ICentralizedVersionControl  */
+    KDevelop::VcsJob* edit(const KUrl& localLocation);
+
+    KDevelop::VcsJob* unedit(const KUrl& localLocation);
+
+    KDevelop::VcsJob* localRevision(const KUrl& localLocation,
+                                    KDevelop::VcsRevision::RevisionType);
+
+    KDevelop::VcsJob* import(const QString & commitMessage,
+                             const KUrl & sourceDirectory,
                              const  KDevelop::VcsLocation & destinationRepository);
-  //@}  
-    
+    //@}
+
     bool hasError() const;
     QString errorDescription() const;
-  
+
     KDevelop::ContextMenuExtension contextMenuExtension(KDevelop::Context* context);
-  
-  
+
+
 public Q_SLOTS:
 
-  /// invoked by context-menu
-  void ctxEdit();
+    /// invoked by context-menu
+    void ctxEdit();
 //   void ctxUnedit();
 //   void ctxLocalRevision();
 //   void ctxImport();
 
 private slots:
-   void parseP4StatusOutput(KDevelop::DVcsJob* job);
-   void parseP4DiffOutput(KDevelop::DVcsJob* job);
-   void parseP4LogOutput(KDevelop::DVcsJob* job);
-   void parseP4AnnotateOutput(KDevelop::DVcsJob* job);
-   
+    void parseP4StatusOutput(KDevelop::DVcsJob* job);
+    void parseP4DiffOutput(KDevelop::DVcsJob* job);
+    void parseP4LogOutput(KDevelop::DVcsJob* job);
+    void parseP4AnnotateOutput(KDevelop::DVcsJob* job);
 
-  
+
+
 private:
     bool isValidDirectory(const KUrl & dirPath);
     KDevelop::DVcsJob* p4fstatJob(const QFileInfo& curFile,
-                            KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
+                                  KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
 
-    bool parseP4fstat(const QFileInfo& curFile, 
-		      KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
+    bool parseP4fstat(const QFileInfo& curFile,
+                      KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
 
-    KDevelop::VcsJob* errorsFound(const QString& error, 
-				  KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
+    KDevelop::VcsJob* errorsFound(const QString& error,
+                                  KDevelop::OutputJob::OutputJobVerbosity verbosity = KDevelop::OutputJob::Verbose);
 
     QString getRepositoryName(const QFileInfo& curFile);
 
 
     void setEnvironmentForJob(KDevelop::DVcsJob* job, QFileInfo const& fsObject);
-    QList<QVariant> getQvariantFromLogOutput(QStringList const& outputLines );
-    
-  
+    QList<QVariant> getQvariantFromLogOutput(QStringList const& outputLines);
+
+
     std::auto_ptr<KDevelop::VcsPluginHelper> m_common;
     QMenu* m_perforcemenu;
     QString m_perforceConfigName;
-	QString m_perforceExecutable;
+    QString m_perforceExecutable;
     KAction* m_edit_action;
 
     bool m_hasError;

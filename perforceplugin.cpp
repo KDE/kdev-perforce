@@ -50,41 +50,38 @@ using namespace KDevelop;
 
 namespace
 {
-  const QString ACTION_STR("... action ");
-  const QString CLIENT_FILE_STR("... clientFile ");
-  const QString DEPOT_FILE_STR("... depotFile ");
-  const QString LOGENTRY_START("... #");
+const QString ACTION_STR("... action ");
+const QString CLIENT_FILE_STR("... clientFile ");
+const QString DEPOT_FILE_STR("... depotFile ");
+const QString LOGENTRY_START("... #");
 }
 
-K_PLUGIN_FACTORY (KdevPerforceFactory, registerPlugin<PerforcePlugin>();)
-K_EXPORT_PLUGIN (KdevPerforceFactory (KAboutData ("kdevperforce","kdevperforce", ki18n ("Perforce"), "0.1", ki18n ("Support for Perforce Version Control System"), KAboutData::License_GPL)))
+K_PLUGIN_FACTORY(KdevPerforceFactory, registerPlugin<PerforcePlugin>();)
+K_EXPORT_PLUGIN(KdevPerforceFactory(KAboutData("kdevperforce", "kdevperforce", ki18n("Perforce"), "0.1", ki18n("Support for Perforce Version Control System"), KAboutData::License_GPL)))
 
-PerforcePlugin::PerforcePlugin(QObject* parent, const QVariantList& ):
-        KDevelop::IPlugin(KdevPerforceFactory::componentData(), parent )
-        , m_common(new KDevelop::VcsPluginHelper(this, this))
-        , m_perforcemenu( 0 )
-        , m_perforceConfigName("p4config.txt")
-		, m_perforceExecutable("p4")
-        , m_edit_action( 0 )
-	, m_hasError(true)
+PerforcePlugin::PerforcePlugin(QObject* parent, const QVariantList&):
+    KDevelop::IPlugin(KdevPerforceFactory::componentData(), parent)
+    , m_common(new KDevelop::VcsPluginHelper(this, this))
+    , m_perforcemenu(0)
+    , m_perforceConfigName("p4config.txt")
+    , m_perforceExecutable("p4")
+    , m_edit_action(0)
+    , m_hasError(true)
 {
     QProcessEnvironment currentEviron(QProcessEnvironment::systemEnvironment());
     QString tmp(currentEviron.value("P4CONFIG"));
-    if (tmp.isEmpty())
-    {
+    if (tmp.isEmpty()) {
         // We require the P4CONFIG variable to be set because the perforce command line client will need it
         m_hasError = true;
         m_errorDescription = i18n("The variable P4CONFIG is not set.");
-	return;
-    }
-    else
-    {
+        return;
+    } else {
         m_perforceConfigName = tmp;
     }
     m_hasError = false;
 
-    KDEV_USE_EXTENSION_INTERFACE( KDevelop::IBasicVersionControl )
-    KDEV_USE_EXTENSION_INTERFACE( KDevelop::ICentralizedVersionControl )
+    KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBasicVersionControl)
+    KDEV_USE_EXTENSION_INTERFACE(KDevelop::ICentralizedVersionControl)
 
 }
 
@@ -107,22 +104,18 @@ bool PerforcePlugin::isValidDirectory(const KUrl & dirPath)
     const QFileInfo finfo(dirPath.toLocalFile());
     QDir dir = finfo.isDir() ? QDir(dirPath.toLocalFile()) : finfo.absoluteDir();
 
-    do
-    {
-        if (dir.exists(m_perforceConfigName))
-        {
+    do {
+        if (dir.exists(m_perforceConfigName)) {
             return true;
         }
-    }
-    while (dir.cdUp());
+    } while (dir.cdUp());
     return false;
 }
 
 bool PerforcePlugin::isVersionControlled(const KUrl& localLocation)
 {
     QFileInfo fsObject(localLocation.toLocalFile());
-    if (fsObject.isDir())
-    {
+    if (fsObject.isDir()) {
         return isValidDirectory(localLocation);
     }
     return parseP4fstat(fsObject, KDevelop::OutputJob::Silent);
@@ -139,8 +132,7 @@ DVcsJob* PerforcePlugin::p4fstatJob(const QFileInfo& curFile, OutputJob::OutputJ
 bool PerforcePlugin::parseP4fstat(const QFileInfo& curFile, OutputJob::OutputJobVerbosity verbosity)
 {
     QScopedPointer<DVcsJob> job(p4fstatJob(curFile, verbosity));
-    if (job->exec() && job->status() == KDevelop::VcsJob::JobSucceeded)
-    {
+    if (job->exec() && job->status() == KDevelop::VcsJob::JobSucceeded) {
         kDebug() << "Perforce returned: " << job->output();
         if (!job->output().isEmpty())
             return true;
@@ -152,24 +144,20 @@ QString PerforcePlugin::getRepositoryName(const QFileInfo& curFile)
 {
     QString ret;
     QScopedPointer<DVcsJob> job(p4fstatJob(curFile, KDevelop::OutputJob::Silent));
-    if (job->exec() && job->status() == KDevelop::VcsJob::JobSucceeded)
-    {
-        if (!job->output().isEmpty())
-	{
-	    QStringList outputLines = job->output().split('\n', QString::SkipEmptyParts);
-	    foreach(const QString& line, outputLines)
-	    {
-		int idx(line.indexOf(DEPOT_FILE_STR));
-		if (idx != -1)
-		{
-		    ret = line.right(line.size() - DEPOT_FILE_STR.size());
-		    return ret;
-		}
-	    }
-	}
+    if (job->exec() && job->status() == KDevelop::VcsJob::JobSucceeded) {
+        if (!job->output().isEmpty()) {
+            QStringList outputLines = job->output().split('\n', QString::SkipEmptyParts);
+            foreach(const QString & line, outputLines) {
+                int idx(line.indexOf(DEPOT_FILE_STR));
+                if (idx != -1) {
+                    ret = line.right(line.size() - DEPOT_FILE_STR.size());
+                    return ret;
+                }
+            }
+        }
     }
-    
-    return ret; 
+
+    return ret;
 }
 
 KDevelop::VcsJob* PerforcePlugin::repositoryLocation(const KUrl& /*localLocation*/)
@@ -204,8 +192,7 @@ KDevelop::VcsJob* PerforcePlugin::move(const KUrl& /*localLocationSrc*/, const K
 
 KDevelop::VcsJob* PerforcePlugin::status(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
-    if (localLocations.count() != 1)
-    {
+    if (localLocations.count() != 1) {
         KMessageBox::error(0, i18n("Please select only one item for this operation"));
         return 0;
     }
@@ -222,8 +209,7 @@ KDevelop::VcsJob* PerforcePlugin::status(const KUrl::List& localLocations, KDeve
 
 KDevelop::VcsJob* PerforcePlugin::revert(const KUrl::List& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
-    if (localLocations.count() != 1)
-    {
+    if (localLocations.count() != 1) {
         KMessageBox::error(0, i18n("Please select only one item for this operation"));
         return 0;
     }
@@ -246,10 +232,10 @@ KDevelop::VcsJob* PerforcePlugin::update(const KUrl::List& localLocations, const
     setEnvironmentForJob(job, curFile);
     //*job << m_perforceExecutable << "-p" << "127.0.0.1:1666" << "info"; - Let's keep this for now it's very handy for debugging
     QString fileOrDirectory;
-    if(curFile.isDir())
-	fileOrDirectory = curFile.absolutePath() + "/...";
+    if (curFile.isDir())
+        fileOrDirectory = curFile.absolutePath() + "/...";
     else
-	fileOrDirectory = curFile.fileName();
+        fileOrDirectory = curFile.fileName();
     *job << m_perforceExecutable << "sync" << fileOrDirectory;
     return job;
 }
@@ -274,69 +260,64 @@ KDevelop::VcsJob* PerforcePlugin::diff(const KUrl& fileOrDirectory, const KDevel
     QFileInfo curFile(fileOrDirectory.toLocalFile());
     QString depotSrcFileName = getRepositoryName(curFile);
     QString depotDstFileName = depotSrcFileName;
-    switch(srcRevision.revisionType())
-    {
-	case VcsRevision::Special:
-	    switch(srcRevision.revisionValue().value<VcsRevision::RevisionSpecialType>()) 
-	    {
-		case VcsRevision::Head:
-		    depotSrcFileName.append("#head");
-		    break;
-		case VcsRevision::Base:
-		    depotSrcFileName.append("#have");
-		    break;
-		case VcsRevision::Previous:
-		    {
-			bool *ok(new bool());
-			int previous = dstRevision.prettyValue().toInt(ok);
-			previous--;
-			QString tmp;
-			tmp.setNum(previous);
-			depotSrcFileName.append("#");
-			depotSrcFileName.append(tmp);
-		    }
-		    break;
-		case VcsRevision::Working:
-		case VcsRevision::Start:
-		case VcsRevision::UserSpecialType:
-		    break;
-	    }
-	    break;
-	case VcsRevision::FileNumber:
-	case VcsRevision::GlobalNumber:
-	    depotSrcFileName.append("#");
-	    depotSrcFileName.append(srcRevision.prettyValue());
-	    break;
-	case VcsRevision::Date:
-	case VcsRevision::Invalid:
-	case VcsRevision::UserSpecialType:
-	    break;
-	    
+    switch (srcRevision.revisionType()) {
+    case VcsRevision::Special:
+        switch (srcRevision.revisionValue().value<VcsRevision::RevisionSpecialType>()) {
+        case VcsRevision::Head:
+            depotSrcFileName.append("#head");
+            break;
+        case VcsRevision::Base:
+            depotSrcFileName.append("#have");
+            break;
+        case VcsRevision::Previous: {
+            bool *ok(new bool());
+            int previous = dstRevision.prettyValue().toInt(ok);
+            previous--;
+            QString tmp;
+            tmp.setNum(previous);
+            depotSrcFileName.append("#");
+            depotSrcFileName.append(tmp);
+        }
+        break;
+        case VcsRevision::Working:
+        case VcsRevision::Start:
+        case VcsRevision::UserSpecialType:
+            break;
+        }
+        break;
+    case VcsRevision::FileNumber:
+    case VcsRevision::GlobalNumber:
+        depotSrcFileName.append("#");
+        depotSrcFileName.append(srcRevision.prettyValue());
+        break;
+    case VcsRevision::Date:
+    case VcsRevision::Invalid:
+    case VcsRevision::UserSpecialType:
+        break;
+
     }
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    switch(dstRevision.revisionType())
-    {
-	case VcsRevision::FileNumber:
-	case VcsRevision::GlobalNumber:
-	    depotDstFileName.append("#");
-	    depotDstFileName.append(dstRevision.prettyValue());
-	    *job << m_perforceExecutable << "diff2" << "-u" << depotSrcFileName << depotDstFileName;
-	    break;
-	case VcsRevision::Special:
-	    switch(dstRevision.revisionValue().value<VcsRevision::RevisionSpecialType>()) 
-	    {
-		case VcsRevision::Working:
-		    *job << m_perforceExecutable << "diff" << "-du" << depotSrcFileName;
-		    break;
-		case VcsRevision::Start:
-		case VcsRevision::UserSpecialType:
-		default:
-		    break;
-	    }
-	default:
-	    break;
+    switch (dstRevision.revisionType()) {
+    case VcsRevision::FileNumber:
+    case VcsRevision::GlobalNumber:
+        depotDstFileName.append("#");
+        depotDstFileName.append(dstRevision.prettyValue());
+        *job << m_perforceExecutable << "diff2" << "-u" << depotSrcFileName << depotDstFileName;
+        break;
+    case VcsRevision::Special:
+        switch (dstRevision.revisionValue().value<VcsRevision::RevisionSpecialType>()) {
+        case VcsRevision::Working:
+            *job << m_perforceExecutable << "diff" << "-du" << depotSrcFileName;
+            break;
+        case VcsRevision::Start:
+        case VcsRevision::UserSpecialType:
+        default:
+            break;
+        }
+    default:
+        break;
     }
     kDebug() << "########### srcRevision Is: " << srcRevision.prettyValue();
     kDebug() << "########### dstRevision Is: " << dstRevision.prettyValue();
@@ -360,16 +341,15 @@ KDevelop::VcsJob* PerforcePlugin::log(const KUrl& localLocation, const KDevelop:
 KDevelop::VcsJob* PerforcePlugin::log(const KUrl& localLocation, const KDevelop::VcsRevision& /*rev*/, const KDevelop::VcsRevision& /*limit*/)
 {
     QFileInfo curFile(localLocation.toLocalFile());
-    if (curFile.isDir())
-    {
-	KMessageBox::error(0, i18n("Please select a file for this operation"));
-	return errorsFound(i18n("Directory not supported for this operation"));
+    if (curFile.isDir()) {
+        KMessageBox::error(0, i18n("Please select a file for this operation"));
+        return errorsFound(i18n("Directory not supported for this operation"));
     }
-    
+
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
     *job << m_perforceExecutable << "filelog" << "-lt" << localLocation;
-    
+
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4LogOutput(KDevelop::DVcsJob*)));
     return job;
 }
@@ -377,16 +357,15 @@ KDevelop::VcsJob* PerforcePlugin::log(const KUrl& localLocation, const KDevelop:
 KDevelop::VcsJob* PerforcePlugin::annotate(const KUrl& localLocation, const KDevelop::VcsRevision& /*rev*/)
 {
     QFileInfo curFile(localLocation.toLocalFile());
-    if (curFile.isDir())
-    {
-	KMessageBox::error(0, i18n("Please select a file for this operation"));
-	return errorsFound(i18n("Directory not supported for this operation"));
+    if (curFile.isDir()) {
+        KMessageBox::error(0, i18n("Please select a file for this operation"));
+        return errorsFound(i18n("Directory not supported for this operation"));
     }
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
     *job << m_perforceExecutable << "annotate" << "-q" << localLocation;
-    
+
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4AnnotateOutput(KDevelop::DVcsJob*)));
     return job;
 }
@@ -423,7 +402,7 @@ KDevelop::VcsJob* PerforcePlugin::unedit(const KUrl& /*localLocation*/)
     return 0;
 }
 
-KDevelop::VcsJob* PerforcePlugin::localRevision(const KUrl& /*localLocation*/, KDevelop::VcsRevision::RevisionType )
+KDevelop::VcsJob* PerforcePlugin::localRevision(const KUrl& /*localLocation*/, KDevelop::VcsRevision::RevisionType)
 {
     return 0;
 }
@@ -440,10 +419,8 @@ KDevelop::ContextMenuExtension PerforcePlugin::contextMenuExtension(KDevelop::Co
     const KUrl::List & ctxUrlList  = m_common->contextUrlList();
 
     bool hasVersionControlledEntries = false;
-    foreach(KUrl const& url, ctxUrlList)
-    {
-        if (isValidDirectory(url))
-        {
+    foreach(KUrl const & url, ctxUrlList) {
+        if (isValidDirectory(url)) {
             hasVersionControlledEntries = true;
             break;
         }
@@ -458,8 +435,7 @@ KDevelop::ContextMenuExtension PerforcePlugin::contextMenuExtension(KDevelop::Co
 
     perforceMenu->addSeparator();
 
-    if ( !m_edit_action )
-    {
+    if (!m_edit_action) {
         m_edit_action = new KAction(i18n("Edit"), this);
         connect(m_edit_action, SIGNAL(triggered()), this, SLOT(ctxEdit()));
     }
@@ -474,8 +450,7 @@ KDevelop::ContextMenuExtension PerforcePlugin::contextMenuExtension(KDevelop::Co
 void PerforcePlugin::ctxEdit()
 {
     KUrl::List const & ctxUrlList = m_common->contextUrlList();
-    if (ctxUrlList.count() != 1)
-    {
+    if (ctxUrlList.count() != 1) {
         KMessageBox::error(0, i18n("Please select only one item for this operation"));
         return;
     }
@@ -494,51 +469,44 @@ void PerforcePlugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile
     //kDebug() << "After setting the environment : " << afterEnv;
 }
 
-QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outputLines )
+QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outputLines)
 {
     QList<QVariant> commits;
     VcsEvent item;
     QString commitMessage;
     bool foundAChangelist(false);
     /// I'm pretty sure this could be done more elegant.
-    foreach(const QString& line, outputLines)
-    {
-	int idx(line.indexOf(LOGENTRY_START));
-	if (idx != -1)
-	{
-	    if(!foundAChangelist)
-	    {
-		foundAChangelist = true;
-	    }
-	    else
-	    {
-		item.setMessage(commitMessage.trimmed()); 
-		commits.append(QVariant::fromValue(item));
-		commitMessage.clear();
-	    }
-	    // expecting the Logentry line to be of the form:
-	    //... #5 change 10 edit on 2010/12/06 12:07:31 by mvo@testbed (text)
-	    //QString changeNumber(line.section(' ', 3, 3 ));
-	    QString localChangeNumber(line.section(' ', 1, 1 ));
-	    localChangeNumber.remove(0, 1); // Remove the # from the local revision number
-	    
-	    QString author(line.section(' ', 9, 9 ));
-	    VcsRevision rev;
-	    rev.setRevisionValue(localChangeNumber, KDevelop::VcsRevision::FileNumber);
-	    item.setRevision(rev);
-	    item.setAuthor(author);
-	    item.setDate(QDateTime::fromString(line.section(' ', 6, 7 ), "yyyy/MM/dd hh:mm:ss") );
-	} 
-	else
-	{
-	    if(foundAChangelist)
-		commitMessage += line +'\n';
-	}
-	
+    foreach(const QString & line, outputLines) {
+        int idx(line.indexOf(LOGENTRY_START));
+        if (idx != -1) {
+            if (!foundAChangelist) {
+                foundAChangelist = true;
+            } else {
+                item.setMessage(commitMessage.trimmed());
+                commits.append(QVariant::fromValue(item));
+                commitMessage.clear();
+            }
+            // expecting the Logentry line to be of the form:
+            //... #5 change 10 edit on 2010/12/06 12:07:31 by mvo@testbed (text)
+            //QString changeNumber(line.section(' ', 3, 3 ));
+            QString localChangeNumber(line.section(' ', 1, 1));
+            localChangeNumber.remove(0, 1); // Remove the # from the local revision number
+
+            QString author(line.section(' ', 9, 9));
+            VcsRevision rev;
+            rev.setRevisionValue(localChangeNumber, KDevelop::VcsRevision::FileNumber);
+            item.setRevision(rev);
+            item.setAuthor(author);
+            item.setDate(QDateTime::fromString(line.section(' ', 6, 7), "yyyy/MM/dd hh:mm:ss"));
+        } else {
+            if (foundAChangelist)
+                commitMessage += line + '\n';
+        }
+
     }
-    item.setMessage(commitMessage); 
+    item.setMessage(commitMessage);
     commits.append(QVariant::fromValue(item));
-    
+
     return commits;
 }
 
@@ -555,35 +523,27 @@ void PerforcePlugin::parseP4StatusOutput(DVcsJob* job)
 
     VcsStatusInfo status;
     status.setState(VcsStatusInfo::ItemUserState);
-    foreach(const QString& line, outputLines)
-    {
+    foreach(const QString & line, outputLines) {
         int idx(line.indexOf(ACTION_STR));
-        if (idx != -1)
-        {
+        if (idx != -1) {
             QString curr = line.right(line.size() - ACTION_STR.size());
             kDebug() << "PARSED FROM P4 FSTAT JOB " << curr;
 
-            if (curr == "edit")
-            {
+            if (curr == "edit") {
                 status.setState(VcsStatusInfo::ItemModified);
-            }
-            else if (curr == "add")
-            {
+            } else if (curr == "add") {
                 status.setState(VcsStatusInfo::ItemAdded);
-            }
-            else
-            {
+            } else {
                 status.setState(VcsStatusInfo::ItemUserState);
             }
             continue;
         }
         idx = line.indexOf(CLIENT_FILE_STR);
-        if (idx != -1)
-        {
+        if (idx != -1) {
             KUrl fileUrl = line.right(line.size() - CLIENT_FILE_STR.size());
             kDebug() << "PARSED URL FROM P4 FSTAT JOB " << fileUrl.url();
-	    status.setUrl(fileUrl);
-	}	
+            status.setUrl(fileUrl);
+        }
     }
     statuses.append(qVariantFromValue<VcsStatusInfo>(status));
     job->setResults(statuses);
@@ -592,7 +552,7 @@ void PerforcePlugin::parseP4StatusOutput(DVcsJob* job)
 void PerforcePlugin::parseP4LogOutput(KDevelop::DVcsJob* job)
 {
     QList<QVariant> commits(getQvariantFromLogOutput(job->output().split('\n', QString::SkipEmptyParts)));
-    
+
     job->setResults(commits);
 }
 
@@ -603,14 +563,11 @@ void PerforcePlugin::parseP4DiffOutput(DVcsJob* job)
 
     QDir dir(job->directory());
 
-    do
-    {
-        if (dir.exists(m_perforceConfigName))
-        {
+    do {
+        if (dir.exists(m_perforceConfigName)) {
             break;
         }
-    }
-    while (dir.cdUp());
+    } while (dir.cdUp());
 
     diff.setBaseDiff(KUrl(dir.absolutePath()));
 
@@ -629,54 +586,49 @@ void PerforcePlugin::parseP4AnnotateOutput(DVcsJob *job)
     QFileInfo curFile(localLocation.toLocalFile());
     setEnvironmentForJob(logJob.data(), curFile);
     *logJob << m_perforceExecutable << "filelog" << "-lt" << localLocation;
-	       
-    if (logJob->exec() && logJob->status() == KDevelop::VcsJob::JobSucceeded)
-    {
-	if (!job->output().isEmpty())
-	{
-	    commits = getQvariantFromLogOutput(logJob->output().split('\n', QString::SkipEmptyParts));
-	}
+
+    if (logJob->exec() && logJob->status() == KDevelop::VcsJob::JobSucceeded) {
+        if (!job->output().isEmpty()) {
+            commits = getQvariantFromLogOutput(logJob->output().split('\n', QString::SkipEmptyParts));
+        }
     }
     VcsAnnotationLine* annotation;
     QStringList lines = job->output().split('\n');
-    
+
     VcsEvent item;
     size_t lineNumber(0);
     QMap<QString, VcsAnnotationLine> definedRevisions;
     bool convertToIntOk(false);
     int localRevisionInt(0);
     QString localRevision;
-    for(QStringList::const_iterator it = lines.constBegin(), itEnd = lines.constEnd();
-	it != itEnd; ++it)
-    {
-	if(it->isEmpty())
-	{
-	    continue;
-	}
+    for (QStringList::const_iterator it = lines.constBegin(), itEnd = lines.constEnd();
+            it != itEnd; ++it) {
+        if (it->isEmpty()) {
+            continue;
+        }
 
-	localRevision = it->left(it->indexOf(':'));
-	
-	annotation = new VcsAnnotationLine;
-	annotation->setLineNumber(lineNumber);
-	VcsRevision rev;
-	rev.setRevisionValue(localRevision, KDevelop::VcsRevision::FileNumber);
-	annotation->setRevision(rev);
-	
-	// Find the other info in the commits list
-	localRevisionInt = commits.size() - localRevision.toInt(&convertToIntOk); 
-	// Skip if we are not going to find the correct event in the List - Set values otherwise
-	if(convertToIntOk &&
-	   localRevisionInt <= commits.size() &&
-	   commits.at(localRevisionInt).canConvert<VcsEvent>())
-	{
-	    item = commits.at(localRevisionInt).value<VcsEvent>();
-	    annotation->setAuthor(item.author());
-	    annotation->setCommitMessage(item.message());
-	    annotation->setDate(item.date());
-	}
-	
-	results += qVariantFromValue(*annotation);
-	++lineNumber;
+        localRevision = it->left(it->indexOf(':'));
+
+        annotation = new VcsAnnotationLine;
+        annotation->setLineNumber(lineNumber);
+        VcsRevision rev;
+        rev.setRevisionValue(localRevision, KDevelop::VcsRevision::FileNumber);
+        annotation->setRevision(rev);
+
+        // Find the other info in the commits list
+        localRevisionInt = commits.size() - localRevision.toInt(&convertToIntOk);
+        // Skip if we are not going to find the correct event in the List - Set values otherwise
+        if (convertToIntOk &&
+                localRevisionInt <= commits.size() &&
+                commits.at(localRevisionInt).canConvert<VcsEvent>()) {
+            item = commits.at(localRevisionInt).value<VcsEvent>();
+            annotation->setAuthor(item.author());
+            annotation->setCommitMessage(item.message());
+            annotation->setDate(item.date());
+        }
+
+        results += qVariantFromValue(*annotation);
+        ++lineNumber;
     }
     job->setResults(results);
 }
