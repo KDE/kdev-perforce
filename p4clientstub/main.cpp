@@ -32,7 +32,6 @@ bool validateNumberOfArguments(int argc, char** /*argv*/)
 int fakeFstatOutput(QString const& filepath)
 {
     std::string fileText = filepath.toUtf8().constData();
-    /// This is the output of d:\projects\tools\test>p4 fstat new_file.txt
     std::cout << "... depotFile /" << fileText << std::endl;// /tools/test/new_file.txt"
     std::cout << "... clientFile /home/projects" << fileText << std::endl;
     std::cout << "... isMapped" << std::endl;
