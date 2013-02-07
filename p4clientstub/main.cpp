@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright 2013  Morten Danielsen Volden                               *
+ *   Copyright 2013  Morten Danielsen Volden  <mvolden2@gmail.com>         *
  *                                                                         *
  *   This program is free software: you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -31,7 +31,8 @@ bool validateNumberOfArguments(int argc, char** /*argv*/)
 
 int fakeFstatOutput(QString const& filepath)
 {
-    std::string fileText = filepath.toUtf8().constData();
+	QByteArray tmp = filepath.toUtf8();
+    std::string fileText(tmp.constData(), tmp.size());
     std::cout << "... depotFile /" << fileText << std::endl;// /tools/test/new_file.txt"
     std::cout << "... clientFile /home/projects" << fileText << std::endl;
     std::cout << "... isMapped" << std::endl;
@@ -72,7 +73,8 @@ int fakeDiffOutput()
 
 int fakeFileLogOutput(QString const& filepath)
 {
-    std::string fileText = filepath.toUtf8().constData();
+	QByteArray tmp = filepath.toUtf8();
+    std::string fileText(tmp.constData(), tmp.size());
     std::cout << "//depot/" << fileText << std::endl;
     std::cout << "... #14 change 72 edit on 2013/02/04 15:38:35 by mvo@testbed (ktext)" << std::endl;
     std::cout << std::endl;
@@ -195,14 +197,16 @@ int fakeAnnotateOutput()
 
 int fakeEditOutput(QString const& filepath)
 {
-    std::string fileText = filepath.toUtf8().constData();
+	QByteArray tmp = filepath.toUtf8();
+    std::string fileText(tmp.constData(), tmp.size());
     std::cout << fileText << "#1 - opened for edit" << std::endl;
     return 0;
 }
 
 int fakeAddOutput(QString const& filepath)
 {
-    std::string fileText = filepath.toUtf8().constData();
+	QByteArray tmp = filepath.toUtf8();
+    std::string fileText(tmp.constData(), tmp.size());
     std::cout << fileText << "#1 - opened for add" << std::endl;
     return 0;
 }
