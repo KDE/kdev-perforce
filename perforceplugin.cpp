@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright 2010  Morten Danielsen Volden                               *
+ *   Copyright 2010  Morten Danielsen Volden <mvolden2@gmail.com>          *
  *                                                                         *
  *   This program is free software: you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -419,7 +419,7 @@ KDevelop::ContextMenuExtension PerforcePlugin::contextMenuExtension(KDevelop::Co
     const KUrl::List & ctxUrlList  = m_common->contextUrlList();
 
     bool hasVersionControlledEntries = false;
-    foreach(KUrl const & url, ctxUrlList) {
+    foreach(const KUrl & url, ctxUrlList) {
         if (isValidDirectory(url)) {
             hasVersionControlledEntries = true;
             break;

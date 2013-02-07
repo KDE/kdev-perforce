@@ -124,6 +124,12 @@ void PerforcePluginTest::testEdit()
     VERIFYJOB(j);
 }
 
+void PerforcePluginTest::testEditMultipleFiles()
+{
+	//KDevelop::VcsJob* j = m_plugin->edit()
+}
+
+
 void PerforcePluginTest::testStatus()
 {
     KDevelop::VcsJob* j = m_plugin->status(KUrl::List(perforceTestBaseDir));

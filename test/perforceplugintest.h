@@ -39,6 +39,7 @@ private slots:
     void cleanup();
     void testAdd();
     void testEdit();
+	void testEditMultipleFiles();
     void testStatus();
     void testAnnotate();
     void testHistory();
