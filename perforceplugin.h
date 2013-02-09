@@ -128,6 +128,10 @@ public:
                              const  KDevelop::VcsLocation & destinationRepository);
     //@}
 
+    /// This plugin implements its own edit method
+    KDevelop::VcsJob* edit(const KUrl::List& localLocations);
+
+
     bool hasError() const;
     QString errorDescription() const;
 

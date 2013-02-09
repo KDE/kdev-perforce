@@ -114,19 +114,24 @@ void PerforcePluginTest::cleanup()
 
 void PerforcePluginTest::testAdd()
 {
-    KDevelop::VcsJob* j = m_plugin->add(KUrl::List(perforceTestBaseDir));
+    KDevelop::VcsJob* j = m_plugin->add(KUrl::List(perforceTestBaseDir + perforceTest_FileName));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testEdit()
 {
-    KDevelop::VcsJob* j = m_plugin->edit(KUrl(perforceTestBaseDir));
+    KDevelop::VcsJob* j = m_plugin->edit(KUrl::List(perforceTestBaseDir + perforceTest_FileName));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testEditMultipleFiles()
 {
-	//KDevelop::VcsJob* j = m_plugin->edit()
+	KUrl::List filesForEdit;
+	filesForEdit.push_back(perforceTestBaseDir + perforceTest_FileName);
+	filesForEdit.push_back(perforceTestBaseDir + perforceTest_FileName2);
+	filesForEdit.push_back(perforceTestBaseDir + perforceTest_FileName3);
+	KDevelop::VcsJob* j = m_plugin->edit(filesForEdit);
+    VERIFYJOB(j);
 }
 
 

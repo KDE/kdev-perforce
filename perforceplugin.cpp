@@ -386,15 +386,20 @@ KDevelop::VcsLocationWidget* PerforcePlugin::vcsLocation(QWidget* parent) const
 }
 
 
-KDevelop::VcsJob* PerforcePlugin::edit(const KUrl& localLocation)
+KDevelop::VcsJob* PerforcePlugin::edit(const KUrl::List& localLocations)
 {
-    QFileInfo curFile(localLocation.toLocalFile());
+    QFileInfo curFile(localLocations.front().toLocalFile());
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << m_perforceExecutable << "edit" << curFile.fileName();
+    *job << m_perforceExecutable << "edit" << localLocations;
 
     return job;
+}
+
+KDevelop::VcsJob* PerforcePlugin::edit(const KUrl& /*localLocation*/)
+{
+    return 0;
 }
 
 KDevelop::VcsJob* PerforcePlugin::unedit(const KUrl& /*localLocation*/)
@@ -450,12 +455,7 @@ KDevelop::ContextMenuExtension PerforcePlugin::contextMenuExtension(KDevelop::Co
 void PerforcePlugin::ctxEdit()
 {
     KUrl::List const & ctxUrlList = m_common->contextUrlList();
-    if (ctxUrlList.count() != 1) {
-        KMessageBox::error(0, i18n("Please select only one item for this operation"));
-        return;
-    }
-    KUrl source = ctxUrlList.first();
-    KDevelop::ICore::self()->runController()->registerJob(edit(source));
+    KDevelop::ICore::self()->runController()->registerJob(edit(ctxUrlList));
 }
 
 void PerforcePlugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile)
