@@ -332,7 +332,7 @@ KDevelop::VcsJob* PerforcePlugin::log(const KUrl& localLocation, const KDevelop:
     QFileInfo curFile(localLocation.toLocalFile());
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << m_perforceExecutable << "filelog" << "-l" << localLocation;
+    *job << m_perforceExecutable << "filelog" << "-lit" << localLocation;
 
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4LogOutput(KDevelop::DVcsJob*)));
     return job;
@@ -348,7 +348,7 @@ KDevelop::VcsJob* PerforcePlugin::log(const KUrl& localLocation, const KDevelop:
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << m_perforceExecutable << "filelog" << "-lt" << localLocation;
+    *job << m_perforceExecutable << "filelog" << "-lit" << localLocation;
 
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4LogOutput(KDevelop::DVcsJob*)));
     return job;
@@ -364,7 +364,7 @@ KDevelop::VcsJob* PerforcePlugin::annotate(const KUrl& localLocation, const KDev
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    *job << m_perforceExecutable << "annotate" << "-q" << localLocation;
+    *job << m_perforceExecutable << "annotate" << "-qi" << localLocation;
 
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4AnnotateOutput(KDevelop::DVcsJob*)));
     return job;
@@ -488,13 +488,14 @@ QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outp
             }
             // expecting the Logentry line to be of the form:
             //... #5 change 10 edit on 2010/12/06 12:07:31 by mvo@testbed (text)
-            //QString changeNumber(line.section(' ', 3, 3 ));
-            QString localChangeNumber(line.section(' ', 1, 1));
-            localChangeNumber.remove(0, 1); // Remove the # from the local revision number
+            QString changeNumber(line.section(' ', 3, 3 ));
+            //QString localChangeNumber(line.section(' ', 1, 1));
+            //localChangeNumber.remove(0, 1); // Remove the # from the local revision number
 
             QString author(line.section(' ', 9, 9));
             VcsRevision rev;
-            rev.setRevisionValue(localChangeNumber, KDevelop::VcsRevision::FileNumber);
+            //rev.setRevisionValue(localChangeNumber, KDevelop::VcsRevision::FileNumber);
+            rev.setRevisionValue(changeNumber, KDevelop::VcsRevision::GlobalNumber);
             item.setRevision(rev);
             item.setAuthor(author);
             item.setDate(QDateTime::fromString(line.section(' ', 6, 7), "yyyy/MM/dd hh:mm:ss"));
@@ -577,7 +578,6 @@ void PerforcePlugin::parseP4DiffOutput(DVcsJob* job)
 void PerforcePlugin::parseP4AnnotateOutput(DVcsJob *job)
 {
     QVariantList results;
-    QList<QVariant> commits;
     /// First get the changelists for this file
     QStringList strList(job->dvcsCommand());
     KUrl localLocation(strList.last()); /// ASSUMPTION WARNING - localLocation is the last in the annotate command
@@ -585,46 +585,56 @@ void PerforcePlugin::parseP4AnnotateOutput(DVcsJob *job)
     QScopedPointer<DVcsJob> logJob(new DVcsJob(job->directory(), this, OutputJob::Silent));
     QFileInfo curFile(localLocation.toLocalFile());
     setEnvironmentForJob(logJob.data(), curFile);
-    *logJob << m_perforceExecutable << "filelog" << "-lt" << localLocation;
+    *logJob << m_perforceExecutable << "filelog" << "-lit" << localLocation;
 
+    QList<QVariant> commits;
     if (logJob->exec() && logJob->status() == KDevelop::VcsJob::JobSucceeded) {
         if (!job->output().isEmpty()) {
             commits = getQvariantFromLogOutput(logJob->output().split('\n', QString::SkipEmptyParts));
         }
     }
+    
+    VcsEvent item;
+    QMap<qlonglong, VcsEvent> globalCommits;
+    /// Move the VcsEvents to a more suitable data strucure
+    for (QList<QVariant>::const_iterator commitsIt = commits.constBegin(), commitsEnd = commits.constEnd(); 
+           commitsIt != commitsEnd; ++commitsIt) {
+		if(commitsIt->canConvert<VcsEvent>())
+        {
+            item = commitsIt->value<VcsEvent>();
+        }
+        globalCommits.insert(item.revision().revisionValue().toLongLong(), item);
+    }
     VcsAnnotationLine* annotation;
     QStringList lines = job->output().split('\n');
 
-    VcsEvent item;
     size_t lineNumber(0);
     QMap<QString, VcsAnnotationLine> definedRevisions;
+    QMap<qlonglong, VcsEvent>::iterator currentEvent;
     bool convertToIntOk(false);
-    int localRevisionInt(0);
-    QString localRevision;
+    int globalRevisionInt(0);
+    QString globalRevision;
     for (QStringList::const_iterator it = lines.constBegin(), itEnd = lines.constEnd();
             it != itEnd; ++it) {
         if (it->isEmpty()) {
             continue;
         }
 
-        localRevision = it->left(it->indexOf(':'));
+        globalRevision = it->left(it->indexOf(':'));
 
         annotation = new VcsAnnotationLine;
         annotation->setLineNumber(lineNumber);
         VcsRevision rev;
-        rev.setRevisionValue(localRevision, KDevelop::VcsRevision::FileNumber);
+        rev.setRevisionValue(globalRevision, KDevelop::VcsRevision::GlobalNumber);
         annotation->setRevision(rev);
-
         // Find the other info in the commits list
-        localRevisionInt = commits.size() - localRevision.toInt(&convertToIntOk);
-        // Skip if we are not going to find the correct event in the List - Set values otherwise
-        if (convertToIntOk &&
-                localRevisionInt <= commits.size() &&
-                commits.at(localRevisionInt).canConvert<VcsEvent>()) {
-            item = commits.at(localRevisionInt).value<VcsEvent>();
-            annotation->setAuthor(item.author());
-            annotation->setCommitMessage(item.message());
-            annotation->setDate(item.date());
+		globalRevisionInt = globalRevision.toLongLong(&convertToIntOk);
+		if(convertToIntOk)
+        {
+            currentEvent = globalCommits.find(globalRevisionInt);
+            annotation->setAuthor(currentEvent->author());
+            annotation->setCommitMessage(currentEvent->message());
+            annotation->setDate(currentEvent->date());
         }
 
         results += qVariantFromValue(*annotation);
