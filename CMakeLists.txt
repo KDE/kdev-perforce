@@ -1,7 +1,5 @@
 project(kdevperforce)
 
-set(KDE4_BUILD_TESTS "ON" CACHE "BOOL" "Enable building of tests" FORCE )
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${kdevperforce_SOURCE_DIR}/cmake)
 
 add_definitions(-DKDE_DEFAULT_DEBUG_AREA=9025)
