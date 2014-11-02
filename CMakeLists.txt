@@ -1,17 +1,38 @@
 project(kdevperforce)
 
+
+set(KDEVPERFORCE_VERSION_MAJOR 1)
+set(KDEVPERFORCE_VERSION_MINOR 9)
+set(KDEVPERFORCE_VERSION_PATCH 90)
+
+# KDevplatform dependency version
+set( KDEVPLATFORM_VERSION "${KDEVPERFORCE_VERSION_MAJOR}.${KDEVPERFORCE_VERSION_MINOR}.${KDEVPERFORCE_VERSION_PATCH}" )
+
+cmake_minimum_required(VERSION 2.8.12)
+find_package (ECM 0.0.9 REQUIRED NO_MODULE)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH})
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${kdevperforce_SOURCE_DIR}/cmake)
+
+include(KDEInstallDirs)
+include(KDECMakeSettings)
+include(KDECompilerSettings)
+
+find_package(Qt5 REQUIRED Core Test)
+find_package(KF5 REQUIRED COMPONENTS KDELibs4Support ThreadWeaver I18n)
+find_package(KDevPlatform ${KDEVPLATFORM_VERSION} REQUIRED)
+
 
 add_definitions(-DKDE_DEFAULT_DEBUG_AREA=9025)
 
-find_package(KDE4 4.5.1 REQUIRED)
-include(KDE4Defaults)
-include(MacroLibrary)
-find_package(KDevPlatform 1.1.60 REQUIRED)
 
 add_definitions (${QT_DEFINITIONS} ${KDE4_DEFINITIONS} -DHAVE_CONFIG_H=1)
 
-include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${KDE4_INCLUDES} ${KDEVPLATFORM_INCLUDE_DIR} )
+include_directories(
+${CMAKE_CURRENT_SOURCE_DIR} 
+${CMAKE_CURRENT_BINARY_DIR} 
+ )
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 add_subdirectory(p4clientstub)
 add_subdirectory(test)
@@ -20,12 +41,9 @@ set(kdevperforce_PART_SRCS
     perforceplugin.cpp
 )
 
-#kde4_add_ui_files( kdevperforce_PART_SRCS myform.ui )
-
-kde4_add_plugin(kdevperforce ${kdevperforce_PART_SRCS})
+add_library(kdevperforce MODULE ${kdevperforce_PART_SRCS})
 
 target_link_libraries(kdevperforce
-    ${KDE4_KDEUI_LIBS}
     kdevplatformvcs
     ${KDEVPLATFORM_INTERFACES_LIBRARIES}
     ${KDEVPLATFORM_LANGUAGE_LIBRARIES}
