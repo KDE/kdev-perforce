@@ -92,7 +92,7 @@ X-KDE-PluginInfo-Author=Morten Danielsen Volden
 X-KDE-PluginInfo-Version=0.1
 X-KDE-PluginInfo-License=GPL
 X-KDE-PluginInfo-Category=Version Control
-X-KDevelop-Version=15
+X-KDevelop-Version=17
 X-KDevelop-Category=Global
 X-KDevelop-Mode=GUI
 
