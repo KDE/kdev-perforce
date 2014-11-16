@@ -21,15 +21,16 @@
 
 #include "perforceplugintest.h"
 
+
 #include <QtTest/QtTest>
 
-#include <qtest_kde.h>
+//#include <qtest_kde.h>
 
 #include <tests/autotestshell.h>
 #include <tests/testcore.h>
 
-#include <KUrl>
-#include <KDebug>
+//#include <KUrl>
+//#include <KDebug>
 
 #include <kio/netaccess.h>
 
@@ -59,7 +60,7 @@ void PerforcePluginTest::init()
     m_core->initialize(KDevelop::Core::NoUi);
     m_plugin = new PerforcePlugin(m_core);
     /// During test we are setting the executable the plugin uses to our own stub
-    m_plugin->m_perforceExecutable = P4_CLIENT_STUB_EXE;
+    // XXX DISABLED for now m_plugin->m_perforceExecutable = P4_CLIENT_STUB_EXE;
     removeTempDirsIfAny();
     createNewTempDirs();
 }
@@ -96,11 +97,11 @@ void PerforcePluginTest::createNewTempDirs()
 void PerforcePluginTest::removeTempDirsIfAny()
 {
     if (QFileInfo(perforceTestBaseDir).exists())
-        if (!KIO::NetAccess::del(KUrl(perforceTestBaseDir), 0))
+        if (!KIO::NetAccess::del(QUrl(perforceTestBaseDir), 0))
             qDebug() << "KIO::NetAccess::del(" << perforceTestBaseDir << ") returned false";
 
     if (QFileInfo(perforceTestBaseDir2).exists())
-        if (!KIO::NetAccess::del(KUrl(perforceTestBaseDir2), 0))
+        if (!KIO::NetAccess::del(QUrl(perforceTestBaseDir2), 0))
             qDebug() << "KIO::NetAccess::del(" << perforceTestBaseDir2 << ") returned false";
 }
 
@@ -114,19 +115,19 @@ void PerforcePluginTest::cleanup()
 
 void PerforcePluginTest::testAdd()
 {
-    KDevelop::VcsJob* j = m_plugin->add(KUrl::List(perforceTestBaseDir + perforceTest_FileName));
+    KDevelop::VcsJob* j = m_plugin->add(QList<QUrl>({ perforceTestBaseDir + perforceTest_FileName } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testEdit()
 {
-    KDevelop::VcsJob* j = m_plugin->edit(KUrl::List(perforceTestBaseDir + perforceTest_FileName));
+    KDevelop::VcsJob* j = m_plugin->edit(QList<QUrl>( { perforceTestBaseDir + perforceTest_FileName } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testEditMultipleFiles()
 {
-	KUrl::List filesForEdit;
+	QList<QUrl> filesForEdit;
 	filesForEdit.push_back(perforceTestBaseDir + perforceTest_FileName);
 	filesForEdit.push_back(perforceTestBaseDir + perforceTest_FileName2);
 	filesForEdit.push_back(perforceTestBaseDir + perforceTest_FileName3);
@@ -137,47 +138,46 @@ void PerforcePluginTest::testEditMultipleFiles()
 
 void PerforcePluginTest::testStatus()
 {
-    KDevelop::VcsJob* j = m_plugin->status(KUrl::List(perforceTestBaseDir));
+    KDevelop::VcsJob* j = m_plugin->status(QList<QUrl>( { perforceTestBaseDir } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testAnnotate()
 {
-    KDevelop::VcsJob* j = m_plugin->annotate(KUrl(perforceTestBaseDir + perforceTest_FileName));
+    KDevelop::VcsJob* j = m_plugin->annotate(QUrl( perforceTestBaseDir + perforceTest_FileName ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testHistory()
 {
-    KDevelop::VcsJob* j = m_plugin->log(KUrl(perforceTestBaseDir + perforceTest_FileName));
+    KDevelop::VcsJob* j = m_plugin->log(QUrl( perforceTestBaseDir + perforceTest_FileName ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testRevert()
 {
-    KDevelop::VcsJob* j = m_plugin->revert(KUrl(perforceTestBaseDir + perforceTest_FileName));
+    KDevelop::VcsJob* j = m_plugin->revert(QList<QUrl>( { perforceTestBaseDir + perforceTest_FileName } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testUpdateFile()
 {
-    KDevelop::VcsJob* j = m_plugin->update(KUrl(perforceTestBaseDir + perforceTest_FileName));
+    KDevelop::VcsJob* j = m_plugin->update(QList<QUrl>( { perforceTestBaseDir + perforceTest_FileName } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testUpdateDir()
 {
-    KDevelop::VcsJob* j = m_plugin->update(KUrl(perforceTestBaseDir));
+    KDevelop::VcsJob* j = m_plugin->update(QList<QUrl>( { perforceTestBaseDir } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testCommit()
 {
     QString commitMsg("this is the commit message");
-    KDevelop::VcsJob* j = m_plugin->commit(commitMsg, KUrl(perforceTestBaseDir));
+    KDevelop::VcsJob* j = m_plugin->commit(commitMsg, QList<QUrl>( { perforceTestBaseDir }  ));
     VERIFYJOB(j);
 }
 
 
-
-QTEST_KDEMAIN(PerforcePluginTest, GUI)
+QTEST_MAIN(PerforcePluginTest)
