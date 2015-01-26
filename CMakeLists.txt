@@ -12,7 +12,7 @@ include(ECMAddTests)
 
 
 find_package(Qt5 REQUIRED Core Test)
-find_package(KF5 REQUIRED COMPONENTS KDELibs4Support )
+find_package(KF5 REQUIRED COMPONENTS KDELibs4Support TextEditor ThreadWeaver)
 find_package(KDevPlatform ${KDEVPLATFORM_VERSION} REQUIRED)
 
 
