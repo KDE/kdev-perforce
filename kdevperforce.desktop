@@ -28,6 +28,7 @@ Comment[x-test]=xxProvides Integration with Perforce Version Control Systemxx
 Comment[zh_CN]=提供与 Perforce 版本控制系统的整合
 Comment[zh_TW]=提供與 Perforce 版本控制系統的整合
 Name=Perforce Support
+Name[ast]=Sofitu Perforce
 Name[bg]=Поддръжка на Perforce
 Name[bs]=Perforce podrška
 Name[cs]=Podpora Perforce
