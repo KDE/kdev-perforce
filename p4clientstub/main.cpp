@@ -31,7 +31,7 @@ bool validateNumberOfArguments(int argc, char** /*argv*/)
 
 int fakeFstatOutput(QString const& filepath)
 {
-	QByteArray tmp = filepath.toUtf8();
+    QByteArray tmp = filepath.toUtf8();
     std::string fileText(tmp.constData(), tmp.size());
     std::cout << "... depotFile /" << fileText << std::endl;// /tools/test/new_file.txt"
     std::cout << "... clientFile /home/projects" << fileText << std::endl;
@@ -197,7 +197,7 @@ int fakeAnnotateOutput()
 
 int fakeEditOutput(QString const& filepath)
 {
-	QByteArray tmp = filepath.toUtf8();
+    QByteArray tmp = filepath.toUtf8();
     std::string fileText(tmp.constData(), tmp.size());
     std::cout << fileText << "#1 - opened for edit" << std::endl;
     return 0;
@@ -205,7 +205,7 @@ int fakeEditOutput(QString const& filepath)
 
 int fakeAddOutput(QString const& filepath)
 {
-	QByteArray tmp = filepath.toUtf8();
+    QByteArray tmp = filepath.toUtf8();
     std::string fileText(tmp.constData(), tmp.size());
     std::cout << fileText << "#1 - opened for add" << std::endl;
     return 0;

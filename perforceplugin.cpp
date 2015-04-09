@@ -16,8 +16,7 @@
  ***************************************************************************/
 
 #include "perforceplugin.h"
-
-#include <iostream>
+#include "debug.h"
 
 #include <KPluginFactory>
 #include <KPluginLoader>
@@ -58,11 +57,7 @@ const QString DEPOT_FILE_STR("... depotFile ");
 const QString LOGENTRY_START("... #");
 }
 
-//Q_LOGGING_CATEGORY(PLUGIN_PERFORCE, "kdevplatform.plugins.perforce")
-
-
-//K_PLUGIN_FACTORY(KdevPerforceFactory, registerPlugin<PerforcePlugin>();)
-//K_EXPORT_PLUGIN(KdevPerforceFactory(KAboutData("kdevperforce", "kdevperforce", ki18n("Perforce"), "0.1", ki18n("Support for Perforce Version Control System"), KAboutData::License_GPL)))
+Q_LOGGING_CATEGORY(PLUGIN_PERFORCE, "kdevplatform.plugins.perforce")
 
 PerforcePlugin::PerforcePlugin(QObject* parent, const QVariantList&):
     KDevelop::IPlugin("kdevperforce", parent)
@@ -70,7 +65,7 @@ PerforcePlugin::PerforcePlugin(QObject* parent, const QVariantList&):
     , m_perforcemenu(0)
     , m_perforceConfigName("p4config.txt")
     , m_perforceExecutable("p4")
-    //, m_edit_action(0)
+    , m_edit_action(0)
     , m_hasError(true)
 {
     QProcessEnvironment currentEviron(QProcessEnvironment::systemEnvironment());
@@ -138,7 +133,7 @@ bool PerforcePlugin::parseP4fstat(const QFileInfo& curFile, OutputJob::OutputJob
 {
     QScopedPointer<DVcsJob> job(p4fstatJob(curFile, verbosity));
     if (job->exec() && job->status() == KDevelop::VcsJob::JobSucceeded) {
-        //qCDebug(PLUGIN_PERFORCE) << "Perforce returned: " << job->output();
+        qCDebug(PLUGIN_PERFORCE) << "Perforce returned: " << job->output();
         if (!job->output().isEmpty())
             return true;
     }
@@ -444,12 +439,11 @@ KDevelop::ContextMenuExtension PerforcePlugin::contextMenuExtension(KDevelop::Co
     perforceMenu->addSeparator();
 
     perforceMenu->addSeparator();
-// TODO
-//     if (!m_edit_action) {
-//         m_edit_action = new KAction(i18n("Edit"), this);
-//         connect(m_edit_action, SIGNAL(triggered()), this, SLOT(ctxEdit()));
-//     }
-//     perforceMenu->addAction(m_edit_action);
+    if (!m_edit_action) {
+         m_edit_action = new QAction(i18n("Edit"), this);
+         connect(m_edit_action, SIGNAL(triggered()), this, SLOT(ctxEdit()));
+     }
+     perforceMenu->addAction(m_edit_action);
 
     ContextMenuExtension menuExt;
     menuExt.addAction(ContextMenuExtension::VcsGroup, perforceMenu->menuAction());
@@ -604,7 +598,7 @@ void PerforcePlugin::parseP4AnnotateOutput(DVcsJob *job)
     /// Move the VcsEvents to a more suitable data strucure
     for (QList<QVariant>::const_iterator commitsIt = commits.constBegin(), commitsEnd = commits.constEnd(); 
            commitsIt != commitsEnd; ++commitsIt) {
-		if(commitsIt->canConvert<VcsEvent>())
+        if(commitsIt->canConvert<VcsEvent>())
         {
             item = commitsIt->value<VcsEvent>();
         }
@@ -633,8 +627,8 @@ void PerforcePlugin::parseP4AnnotateOutput(DVcsJob *job)
         rev.setRevisionValue(globalRevision, KDevelop::VcsRevision::GlobalNumber);
         annotation->setRevision(rev);
         // Find the other info in the commits list
-		globalRevisionInt = globalRevision.toLongLong(&convertToIntOk);
-		if(convertToIntOk)
+        globalRevisionInt = globalRevision.toLongLong(&convertToIntOk);
+        if(convertToIntOk)
         {
             currentEvent = globalCommits.find(globalRevisionInt);
             annotation->setAuthor(currentEvent->author());
@@ -665,6 +659,5 @@ QString PerforcePlugin::errorDescription() const
 {
     return m_errorDescription;
 }
-
 
 

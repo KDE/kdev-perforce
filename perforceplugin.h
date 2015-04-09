@@ -27,8 +27,6 @@
 #include <QVariantList>
 #include <QString>
 
-//#include <kaction.h>
-//#include <KMimeType>
 #include <memory>
 
 class QMenu;
@@ -175,7 +173,7 @@ private:
     QMenu* m_perforcemenu;
     QString m_perforceConfigName;
     QString m_perforceExecutable;
-    //KAction* m_edit_action;
+    QAction* m_edit_action;
 
     bool m_hasError;
     QString m_errorDescription;
