@@ -95,9 +95,11 @@
         "ServiceTypes": [
             "KDevelop/Plugin"
         ],
-        "Version": "0.1"
+        "Version": "5.0"
     },
     "X-KDevelop-Category": "Global",
     "X-KDevelop-Mode": "GUI",
-    "X-KDevelop-IRequired": "org.kdevelop.IExecutePlugin"
+    "X-KDevelop-IRequired": [
+        "org.kdevelop.IExecutePlugin"
+    ]
 }
