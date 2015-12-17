@@ -50,90 +50,90 @@ class PerforcePlugin : public KDevelop::IPlugin, public KDevelop::ICentralizedVe
     friend class PerforcePluginTest;
 public:
     PerforcePlugin(QObject* parent, const QVariantList & = QVariantList());
-    virtual ~PerforcePlugin();
+    ~PerforcePlugin() override;
 
     //@{
     /** Methods inherited from KDevelop::IBasicVersionControl */
-    QString name() const;
+    QString name() const override;
 
-    KDevelop::VcsImportMetadataWidget* createImportMetadataWidget(QWidget* parent);
+    KDevelop::VcsImportMetadataWidget* createImportMetadataWidget(QWidget* parent) override;
 
-    bool isVersionControlled(const QUrl& localLocation);
+    bool isVersionControlled(const QUrl& localLocation) override;
 
-    KDevelop::VcsJob* repositoryLocation(const QUrl& localLocation);
+    KDevelop::VcsJob* repositoryLocation(const QUrl& localLocation) override;
 
     KDevelop::VcsJob* add(const QList<QUrl>& localLocations,
-                          RecursionMode recursion = IBasicVersionControl::Recursive);
-    KDevelop::VcsJob* remove(const QList<QUrl>& localLocations);
+                          RecursionMode recursion = IBasicVersionControl::Recursive) override;
+    KDevelop::VcsJob* remove(const QList<QUrl>& localLocations) override;
 
     KDevelop::VcsJob* copy(const QUrl& localLocationSrc,
-                           const QUrl& localLocationDstn);
+                           const QUrl& localLocationDstn) override;
     KDevelop::VcsJob* move(const QUrl& localLocationSrc,
-                           const QUrl& localLocationDst);
+                           const QUrl& localLocationDst) override;
     KDevelop::VcsJob* status(const QList<QUrl>& localLocations,
-                             RecursionMode recursion = IBasicVersionControl::Recursive);
+                             RecursionMode recursion = IBasicVersionControl::Recursive) override;
 
     KDevelop::VcsJob* revert(const QList<QUrl>& localLocations,
-                             RecursionMode recursion = IBasicVersionControl::Recursive);
+                             RecursionMode recursion = IBasicVersionControl::Recursive) override;
 
     KDevelop::VcsJob* update(const QList<QUrl>& localLocations,
                              const KDevelop::VcsRevision& rev = KDevelop::VcsRevision::createSpecialRevision(KDevelop::VcsRevision::Head),
-                             KDevelop::IBasicVersionControl::RecursionMode recursion = KDevelop::IBasicVersionControl::Recursive);
+                             KDevelop::IBasicVersionControl::RecursionMode recursion = KDevelop::IBasicVersionControl::Recursive) override;
 
     KDevelop::VcsJob* commit(const QString& message,
                              const QList<QUrl>& localLocations,
-                             KDevelop::IBasicVersionControl::RecursionMode recursion = KDevelop::IBasicVersionControl::Recursive);
+                             KDevelop::IBasicVersionControl::RecursionMode recursion = KDevelop::IBasicVersionControl::Recursive) override;
 
     KDevelop::VcsJob* diff(const QUrl& fileOrDirectory,
                            const KDevelop::VcsRevision& srcRevision,
                            const KDevelop::VcsRevision& dstRevision,
                            KDevelop::VcsDiff::Type = KDevelop::VcsDiff::DiffUnified,
-                           KDevelop::IBasicVersionControl::RecursionMode recursion = KDevelop::IBasicVersionControl::Recursive);
+                           KDevelop::IBasicVersionControl::RecursionMode recursion = KDevelop::IBasicVersionControl::Recursive) override;
 
     KDevelop::VcsJob* log(const QUrl& localLocation,
                           const KDevelop::VcsRevision& rev,
-                          unsigned long limit = 0);
+                          unsigned long limit = 0) override;
 
     KDevelop::VcsJob* log(const QUrl& localLocation,
                           const KDevelop::VcsRevision& rev = KDevelop::VcsRevision::createSpecialRevision(KDevelop::VcsRevision::Base),
-                          const KDevelop::VcsRevision& limit = KDevelop::VcsRevision::createSpecialRevision(KDevelop::VcsRevision::Start));
+                          const KDevelop::VcsRevision& limit = KDevelop::VcsRevision::createSpecialRevision(KDevelop::VcsRevision::Start)) override;
 
     KDevelop::VcsJob* annotate(const QUrl& localLocation,
-                               const KDevelop::VcsRevision& rev = KDevelop::VcsRevision::createSpecialRevision(KDevelop::VcsRevision::Head));
+                               const KDevelop::VcsRevision& rev = KDevelop::VcsRevision::createSpecialRevision(KDevelop::VcsRevision::Head)) override;
 
     KDevelop::VcsJob* resolve(const QList<QUrl>& localLocations,
-                              KDevelop::IBasicVersionControl::RecursionMode recursion);
+                              KDevelop::IBasicVersionControl::RecursionMode recursion) override;
 
     KDevelop::VcsJob* createWorkingCopy(const  KDevelop::VcsLocation & sourceRepository,
                                         const QUrl & destinationDirectory,
-                                        KDevelop::IBasicVersionControl::RecursionMode recursion = IBasicVersionControl::Recursive);
+                                        KDevelop::IBasicVersionControl::RecursionMode recursion = IBasicVersionControl::Recursive) override;
 
 
-    KDevelop::VcsLocationWidget* vcsLocation(QWidget* parent) const;
+    KDevelop::VcsLocationWidget* vcsLocation(QWidget* parent) const override;
     //@}
 
     //@{
     /** Methods inherited from KDevelop::ICentralizedVersionControl  */
-    KDevelop::VcsJob* edit(const QUrl& localLocation);
+    KDevelop::VcsJob* edit(const QUrl& localLocation) override;
 
-    KDevelop::VcsJob* unedit(const QUrl& localLocation);
+    KDevelop::VcsJob* unedit(const QUrl& localLocation) override;
 
     KDevelop::VcsJob* localRevision(const QUrl& localLocation,
-                                    KDevelop::VcsRevision::RevisionType);
+                                    KDevelop::VcsRevision::RevisionType) override;
 
     KDevelop::VcsJob* import(const QString & commitMessage,
                              const QUrl & sourceDirectory,
-                             const  KDevelop::VcsLocation & destinationRepository);
+                             const  KDevelop::VcsLocation & destinationRepository) override;
     //@}
 
     /// This plugin implements its own edit method
     KDevelop::VcsJob* edit(const QList<QUrl>& localLocations);
 
 
-    bool hasError() const;
-    QString errorDescription() const;
+    bool hasError() const override;
+    QString errorDescription() const override;
 
-    KDevelop::ContextMenuExtension contextMenuExtension(KDevelop::Context* context);
+    KDevelop::ContextMenuExtension contextMenuExtension(KDevelop::Context* context) override;
 
 
 public Q_SLOTS:
