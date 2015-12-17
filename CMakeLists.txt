@@ -1,41 +1,41 @@
 project(kdevperforce)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${kdevperforce_SOURCE_DIR}/cmake)
+#add_definitions(-DTRANSLATION_DOMAIN=\"kdevperforce\")
 
-add_definitions(-DKDE_DEFAULT_DEBUG_AREA=9025)
+cmake_minimum_required(VERSION 2.8.12)
+find_package (ECM 0.0.9 REQUIRED NO_MODULE)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} )
 
-find_package(KDE4 4.5.1 REQUIRED)
-include(KDE4Defaults)
-include(MacroLibrary)
-find_package(KDevPlatform 1.1.60 REQUIRED)
+include(KDEInstallDirs)
+include(KDECMakeSettings)
+include(KDECompilerSettings)
+include(ECMAddTests)
 
-add_definitions (${QT_DEFINITIONS} ${KDE4_DEFINITIONS} -DHAVE_CONFIG_H=1)
 
-include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${KDE4_INCLUDES} ${KDEVPLATFORM_INCLUDE_DIR} )
+
+find_package(Qt5 REQUIRED Core Test)
+find_package(KF5 REQUIRED COMPONENTS TextEditor ThreadWeaver ItemModels)
+find_package(KDevPlatform ${KDEVPLATFORM_VERSION} REQUIRED)
 
 add_subdirectory(p4clientstub)
 add_subdirectory(test)
 
 set(kdevperforce_PART_SRCS
     perforceplugin.cpp
+    perforcepluginmetadata.cpp
 )
 
-#kde4_add_ui_files( kdevperforce_PART_SRCS myform.ui )
-
-kde4_add_plugin(kdevperforce ${kdevperforce_PART_SRCS})
+kdevplatform_add_plugin(kdevperforce JSON kdevperforce.json SOURCES ${kdevperforce_PART_SRCS})
 
 target_link_libraries(kdevperforce
-    ${KDE4_KDEUI_LIBS}
-    kdevplatformvcs
-    ${KDEVPLATFORM_INTERFACES_LIBRARIES}
-    ${KDEVPLATFORM_LANGUAGE_LIBRARIES}
+   KDev::Interfaces
+   KDev::Vcs
 )
 
+########### install files ###############
 install(TARGETS kdevperforce DESTINATION ${PLUGIN_INSTALL_DIR} )
 
 
-########### install files ###############
-install( FILES kdevperforce.desktop DESTINATION ${SERVICES_INSTALL_DIR} )
 install( FILES kdevperforce.rc DESTINATION ${DATA_INSTALL_DIR}/kdevperforce)
 
 

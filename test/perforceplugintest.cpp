@@ -21,17 +21,13 @@
 
 #include "perforceplugintest.h"
 
+
 #include <QtTest/QtTest>
 
-#include <qtest_kde.h>
+//#include <qtest_kde.h>
 
 #include <tests/autotestshell.h>
 #include <tests/testcore.h>
-
-#include <KUrl>
-#include <KDebug>
-
-#include <kio/netaccess.h>
 
 #include <vcs/dvcs/dvcsjob.h>
 #include <vcs/vcsjob.h>
@@ -43,6 +39,7 @@
     QVERIFY(j); QVERIFY(j->exec()); QVERIFY((j)->status() == KDevelop::VcsJob::JobSucceeded)
 
 const QString tempDir = QDir::tempPath();
+const QString perforceTestBaseDirNoSlash(tempDir + "/kdevPerforce_testdir");
 const QString perforceTestBaseDir(tempDir + "/kdevPerforce_testdir/");
 const QString perforceTestBaseDir2(tempDir + "/kdevPerforce_testdir2/");
 const QString perforceConfigFileName("p4config.txt");
@@ -95,13 +92,13 @@ void PerforcePluginTest::createNewTempDirs()
 
 void PerforcePluginTest::removeTempDirsIfAny()
 {
-    if (QFileInfo(perforceTestBaseDir).exists())
-        if (!KIO::NetAccess::del(KUrl(perforceTestBaseDir), 0))
-            qDebug() << "KIO::NetAccess::del(" << perforceTestBaseDir << ") returned false";
+    QDir dir(perforceTestBaseDir);
+    if (dir.exists() && !dir.removeRecursively())
+        qDebug() << "QDir::removeRecursively(" << perforceTestBaseDir << ") returned false";
 
-    if (QFileInfo(perforceTestBaseDir2).exists())
-        if (!KIO::NetAccess::del(KUrl(perforceTestBaseDir2), 0))
-            qDebug() << "KIO::NetAccess::del(" << perforceTestBaseDir2 << ") returned false";
+    QDir dir2(perforceTestBaseDir);
+    if (dir2.exists() && !dir2.removeRecursively())
+        qDebug() << "QDir::removeRecursively(" << perforceTestBaseDir2 << ") returned false";
 }
 
 
@@ -114,70 +111,69 @@ void PerforcePluginTest::cleanup()
 
 void PerforcePluginTest::testAdd()
 {
-    KDevelop::VcsJob* j = m_plugin->add(KUrl::List(perforceTestBaseDir + perforceTest_FileName));
+    KDevelop::VcsJob* j = m_plugin->add(QList<QUrl>({ QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testEdit()
 {
-    KDevelop::VcsJob* j = m_plugin->edit(KUrl::List(perforceTestBaseDir + perforceTest_FileName));
+    KDevelop::VcsJob* j = m_plugin->edit(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testEditMultipleFiles()
 {
-	KUrl::List filesForEdit;
-	filesForEdit.push_back(perforceTestBaseDir + perforceTest_FileName);
-	filesForEdit.push_back(perforceTestBaseDir + perforceTest_FileName2);
-	filesForEdit.push_back(perforceTestBaseDir + perforceTest_FileName3);
-	KDevelop::VcsJob* j = m_plugin->edit(filesForEdit);
+    QList<QUrl> filesForEdit;
+    filesForEdit.push_back(QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName));
+    filesForEdit.push_back(QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName2));
+    filesForEdit.push_back(QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName3));
+    KDevelop::VcsJob* j = m_plugin->edit(filesForEdit);
     VERIFYJOB(j);
 }
 
 
 void PerforcePluginTest::testStatus()
 {
-    KDevelop::VcsJob* j = m_plugin->status(KUrl::List(perforceTestBaseDir));
+    KDevelop::VcsJob* j = m_plugin->status(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDirNoSlash) } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testAnnotate()
 {
-    KDevelop::VcsJob* j = m_plugin->annotate(KUrl(perforceTestBaseDir + perforceTest_FileName));
+    KDevelop::VcsJob* j = m_plugin->annotate(QUrl( QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testHistory()
 {
-    KDevelop::VcsJob* j = m_plugin->log(KUrl(perforceTestBaseDir + perforceTest_FileName));
+    KDevelop::VcsJob* j = m_plugin->log(QUrl( QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testRevert()
 {
-    KDevelop::VcsJob* j = m_plugin->revert(KUrl(perforceTestBaseDir + perforceTest_FileName));
+    KDevelop::VcsJob* j = m_plugin->revert(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testUpdateFile()
 {
-    KDevelop::VcsJob* j = m_plugin->update(KUrl(perforceTestBaseDir + perforceTest_FileName));
+    KDevelop::VcsJob* j = m_plugin->update(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testUpdateDir()
 {
-    KDevelop::VcsJob* j = m_plugin->update(KUrl(perforceTestBaseDir));
+    KDevelop::VcsJob* j = m_plugin->update(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDirNoSlash) } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testCommit()
 {
     QString commitMsg("this is the commit message");
-    KDevelop::VcsJob* j = m_plugin->commit(commitMsg, KUrl(perforceTestBaseDir));
+    KDevelop::VcsJob* j = m_plugin->commit(commitMsg, QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDirNoSlash) }  ));
     VERIFYJOB(j);
 }
 
 
-
-QTEST_KDEMAIN(PerforcePluginTest, GUI)
+QTEST_MAIN(PerforcePluginTest)

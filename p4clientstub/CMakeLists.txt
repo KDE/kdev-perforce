@@ -2,8 +2,8 @@ project(p4clientstub)
 
 set(p4clientstub_SRCS  main.cpp )
 
-kde4_add_executable(p4clientstub ${p4clientstub_SRCS} )
+add_executable(p4clientstub ${p4clientstub_SRCS} )
 
 target_link_libraries(p4clientstub
-       ${QT_QTCORE_LIBRARY}
+       Qt5::Core
 )
