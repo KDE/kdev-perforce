@@ -62,10 +62,10 @@ Q_LOGGING_CATEGORY(PLUGIN_PERFORCE, "kdevplatform.plugins.perforce")
 PerforcePlugin::PerforcePlugin(QObject* parent, const QVariantList&):
     KDevelop::IPlugin("kdevperforce", parent)
     , m_common(new KDevelop::VcsPluginHelper(this, this))
-    , m_perforcemenu(0)
+    , m_perforcemenu(nullptr)
     , m_perforceConfigName("p4config.txt")
     , m_perforceExecutable("p4")
-    , m_edit_action(0)
+    , m_edit_action(nullptr)
     , m_hasError(true)
 {
     QProcessEnvironment currentEviron(QProcessEnvironment::systemEnvironment());
@@ -96,7 +96,7 @@ QString PerforcePlugin::name() const
 
 KDevelop::VcsImportMetadataWidget* PerforcePlugin::createImportMetadataWidget(QWidget* /*parent*/)
 {
-    return 0;
+    return nullptr;
 }
 
 bool PerforcePlugin::isValidDirectory(const QUrl & dirPath)
@@ -162,7 +162,7 @@ QString PerforcePlugin::getRepositoryName(const QFileInfo& curFile)
 
 KDevelop::VcsJob* PerforcePlugin::repositoryLocation(const QUrl& /*localLocation*/)
 {
-    return 0;
+    return nullptr;
 }
 
 KDevelop::VcsJob* PerforcePlugin::add(const QList<QUrl>& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
@@ -177,24 +177,24 @@ KDevelop::VcsJob* PerforcePlugin::add(const QList<QUrl>& localLocations, KDevelo
 
 KDevelop::VcsJob* PerforcePlugin::remove(const QList<QUrl>& /*localLocations*/)
 {
-    return 0;
+    return nullptr;
 }
 
 KDevelop::VcsJob* PerforcePlugin::copy(const QUrl& /*localLocationSrc*/, const QUrl& /*localLocationDstn*/)
 {
-    return 0;
+    return nullptr;
 }
 
 KDevelop::VcsJob* PerforcePlugin::move(const QUrl& /*localLocationSrc*/, const QUrl& /*localLocationDst*/)
 {
-    return 0;
+    return nullptr;
 }
 
 KDevelop::VcsJob* PerforcePlugin::status(const QList<QUrl>& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     if (localLocations.count() != 1) {
-        KMessageBox::error(0, i18n("Please select only one item for this operation"));
-        return 0;
+        KMessageBox::error(nullptr, i18n("Please select only one item for this operation"));
+        return nullptr;
     }
 
     QFileInfo curFile(localLocations.front().toLocalFile());
@@ -210,8 +210,8 @@ KDevelop::VcsJob* PerforcePlugin::status(const QList<QUrl>& localLocations, KDev
 KDevelop::VcsJob* PerforcePlugin::revert(const QList<QUrl>& localLocations, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
     if (localLocations.count() != 1) {
-        KMessageBox::error(0, i18n("Please select only one item for this operation"));
-        return 0;
+        KMessageBox::error(nullptr, i18n("Please select only one item for this operation"));
+        return nullptr;
     }
 
     QFileInfo curFile(localLocations.front().toLocalFile());
@@ -342,7 +342,7 @@ KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop:
 {
     QFileInfo curFile(localLocation.toLocalFile());
     if (curFile.isDir()) {
-        KMessageBox::error(0, i18n("Please select a file for this operation"));
+        KMessageBox::error(nullptr, i18n("Please select a file for this operation"));
         return errorsFound(i18n("Directory not supported for this operation"));
     }
 
@@ -358,7 +358,7 @@ KDevelop::VcsJob* PerforcePlugin::annotate(const QUrl& localLocation, const KDev
 {
     QFileInfo curFile(localLocation.toLocalFile());
     if (curFile.isDir()) {
-        KMessageBox::error(0, i18n("Please select a file for this operation"));
+        KMessageBox::error(nullptr, i18n("Please select a file for this operation"));
         return errorsFound(i18n("Directory not supported for this operation"));
     }
 
@@ -372,12 +372,12 @@ KDevelop::VcsJob* PerforcePlugin::annotate(const QUrl& localLocation, const KDev
 
 KDevelop::VcsJob* PerforcePlugin::resolve(const QList<QUrl>& /*localLocations*/, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
-    return 0;
+    return nullptr;
 }
 
 KDevelop::VcsJob* PerforcePlugin::createWorkingCopy(const KDevelop::VcsLocation& /*sourceRepository*/, const QUrl& /*destinationDirectory*/, KDevelop::IBasicVersionControl::RecursionMode /*recursion*/)
 {
-    return 0;
+    return nullptr;
 }
 
 KDevelop::VcsLocationWidget* PerforcePlugin::vcsLocation(QWidget* parent) const
@@ -399,22 +399,22 @@ KDevelop::VcsJob* PerforcePlugin::edit(const QList<QUrl>& localLocations)
 
 KDevelop::VcsJob* PerforcePlugin::edit(const QUrl& /*localLocation*/)
 {
-    return 0;
+    return nullptr;
 }
 
 KDevelop::VcsJob* PerforcePlugin::unedit(const QUrl& /*localLocation*/)
 {
-    return 0;
+    return nullptr;
 }
 
 KDevelop::VcsJob* PerforcePlugin::localRevision(const QUrl& /*localLocation*/, KDevelop::VcsRevision::RevisionType)
 {
-    return 0;
+    return nullptr;
 }
 
 KDevelop::VcsJob* PerforcePlugin::import(const QString& /*commitMessage*/, const QUrl& /*sourceDirectory*/, const KDevelop::VcsLocation& /*destinationRepository*/)
 {
-    return 0;
+    return nullptr;
 }
 
 KDevelop::ContextMenuExtension PerforcePlugin::contextMenuExtension(KDevelop::Context* context)
