@@ -11,8 +11,6 @@ include(KDECMakeSettings)
 include(KDECompilerSettings)
 include(ECMAddTests)
 
-
-
 find_package(Qt5 REQUIRED Core Test)
 find_package(KF5 REQUIRED COMPONENTS TextEditor ThreadWeaver ItemModels)
 find_package(KDevPlatform ${KDEVPLATFORM_VERSION} REQUIRED)
@@ -26,18 +24,9 @@ set(kdevperforce_PART_SRCS
 )
 
 kdevplatform_add_plugin(kdevperforce JSON kdevperforce.json SOURCES ${kdevperforce_PART_SRCS})
-
 target_link_libraries(kdevperforce
    KDev::Interfaces
    KDev::Vcs
 )
 
-########### install files ###############
-install(TARGETS kdevperforce DESTINATION ${PLUGIN_INSTALL_DIR} )
-
-
 install( FILES kdevperforce.rc DESTINATION ${DATA_INSTALL_DIR}/kdevperforce)
-
-
-
-
