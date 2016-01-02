@@ -540,7 +540,8 @@ void PerforcePlugin::parseP4StatusOutput(DVcsJob* job)
         }
         idx = line.indexOf(CLIENT_FILE_STR);
         if (idx != -1) {
-            QUrl fileUrl = line.right(line.size() - CLIENT_FILE_STR.size());
+            QUrl fileUrl = QUrl::fromLocalFile(line.right(line.size() - CLIENT_FILE_STR.size()));
+
             //kDebug() << "PARSED URL FROM P4 FSTAT JOB " << fileUrl.url();
             status.setUrl(fileUrl);
         }
@@ -569,7 +570,7 @@ void PerforcePlugin::parseP4DiffOutput(DVcsJob* job)
         }
     } while (dir.cdUp());
 
-    diff.setBaseDiff(QUrl(dir.absolutePath()));
+    diff.setBaseDiff(QUrl::fromLocalFile(dir.absolutePath()));
 
     job->setResults(qVariantFromValue(diff));
 }
