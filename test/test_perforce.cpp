@@ -33,7 +33,7 @@
 #include <perforceplugin.h>
 
 #define VERIFYJOB(j) \
-    QVERIFY(j); QVERIFY(j->exec()); QVERIFY((j)->status() == KDevelop::VcsJob::JobSucceeded)
+    QVERIFY(j); QVERIFY(j->exec()); QVERIFY((j)->status() == VcsJob::JobSucceeded)
 
 const QString tempDir = QDir::tempPath();
 const QString perforceTestBaseDirNoSlash(tempDir + "/kdevPerforce_testdir");
@@ -46,11 +46,13 @@ const QString perforceTest_FileName("testfile");
 const QString perforceTest_FileName2("foo");
 const QString perforceTest_FileName3("bar");
 
+using namespace KDevelop;
+
 void PerforcePluginTest::init()
 {
-    KDevelop::AutoTestShell::init();
-    m_core = new KDevelop::TestCore();
-    m_core->initialize(KDevelop::Core::NoUi);
+    AutoTestShell::init({"kdevperforce"});
+    m_core = new TestCore();
+    m_core->initialize(Core::NoUi);
     m_plugin = new PerforcePlugin(m_core);
     /// During test we are setting the executable the plugin uses to our own stub
     m_plugin->m_perforceExecutable = P4_CLIENT_STUB_EXE;
@@ -108,13 +110,13 @@ void PerforcePluginTest::cleanup()
 
 void PerforcePluginTest::testAdd()
 {
-    KDevelop::VcsJob* j = m_plugin->add(QList<QUrl>({ QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) } ));
+    VcsJob* j = m_plugin->add(QList<QUrl>({ QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testEdit()
 {
-    KDevelop::VcsJob* j = m_plugin->edit(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) } ));
+    VcsJob* j = m_plugin->edit(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) } ));
     VERIFYJOB(j);
 }
 
@@ -124,51 +126,51 @@ void PerforcePluginTest::testEditMultipleFiles()
     filesForEdit.push_back(QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName));
     filesForEdit.push_back(QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName2));
     filesForEdit.push_back(QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName3));
-    KDevelop::VcsJob* j = m_plugin->edit(filesForEdit);
+    VcsJob* j = m_plugin->edit(filesForEdit);
     VERIFYJOB(j);
 }
 
 
 void PerforcePluginTest::testStatus()
 {
-    KDevelop::VcsJob* j = m_plugin->status(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDirNoSlash) } ));
+    VcsJob* j = m_plugin->status(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDirNoSlash) } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testAnnotate()
 {
-    KDevelop::VcsJob* j = m_plugin->annotate(QUrl( QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) ));
+    VcsJob* j = m_plugin->annotate(QUrl( QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testHistory()
 {
-    KDevelop::VcsJob* j = m_plugin->log(QUrl( QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) ));
+    VcsJob* j = m_plugin->log(QUrl( QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testRevert()
 {
-    KDevelop::VcsJob* j = m_plugin->revert(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) } ));
+    VcsJob* j = m_plugin->revert(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testUpdateFile()
 {
-    KDevelop::VcsJob* j = m_plugin->update(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) } ));
+    VcsJob* j = m_plugin->update(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName) } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testUpdateDir()
 {
-    KDevelop::VcsJob* j = m_plugin->update(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDirNoSlash) } ));
+    VcsJob* j = m_plugin->update(QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDirNoSlash) } ));
     VERIFYJOB(j);
 }
 
 void PerforcePluginTest::testCommit()
 {
     QString commitMsg("this is the commit message");
-    KDevelop::VcsJob* j = m_plugin->commit(commitMsg, QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDirNoSlash) }  ));
+    VcsJob* j = m_plugin->commit(commitMsg, QList<QUrl>( { QUrl::fromLocalFile(perforceTestBaseDirNoSlash) }  ));
     VERIFYJOB(j);
 }
 
