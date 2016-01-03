@@ -487,11 +487,11 @@ QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outp
             }
             // expecting the Logentry line to be of the form:
             //... #5 change 10 edit on 2010/12/06 12:07:31 by mvo@testbed (text)
-            QString changeNumber(line.section(' ', 3, 3 ));
-            //QString localChangeNumber(line.section(' ', 1, 1));
-            //localChangeNumber.remove(0, 1); // Remove the # from the local revision number
+            QString changeNumber(line.section(' ', 3, 3 )); // We use global change number
 
             QString author(line.section(' ', 9, 9));
+            int indexofAt = author.indexOf('@');
+            author.remove(indexofAt, author.size()); // Only keep the username itself
             VcsRevision rev;
             //rev.setRevisionValue(localChangeNumber, KDevelop::VcsRevision::FileNumber);
             rev.setRevisionValue(changeNumber, KDevelop::VcsRevision::GlobalNumber);
