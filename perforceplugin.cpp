@@ -561,7 +561,6 @@ void PerforcePlugin::parseP4DiffOutput(DVcsJob* job)
 {
     VcsDiff diff;
     diff.setDiff(job->output());
-
     QDir dir(job->directory());
 
     do {
@@ -580,12 +579,13 @@ void PerforcePlugin::parseP4AnnotateOutput(DVcsJob *job)
     QVariantList results;
     /// First get the changelists for this file
     QStringList strList(job->dvcsCommand());
-    QUrl localLocation(strList.last()); /// ASSUMPTION WARNING - localLocation is the last in the annotate command
+    QString localLocation(strList.last()); /// ASSUMPTION WARNING - localLocation is the last in the annotate command
     KDevelop::VcsRevision dummyRev;
     QScopedPointer<DVcsJob> logJob(new DVcsJob(job->directory(), this, OutputJob::Silent));
-    QFileInfo curFile(localLocation.toLocalFile());
+    QFileInfo curFile(localLocation);
     setEnvironmentForJob(logJob.data(), curFile);
     *logJob << m_perforceExecutable << "filelog" << "-lit" << localLocation;
+    //qWarning() << "Issuing the following command to p4: " << logJob->dvcsCommand();
 
     QList<QVariant> commits;
     if (logJob->exec() && logJob->status() == KDevelop::VcsJob::JobSucceeded) {
@@ -605,6 +605,7 @@ void PerforcePlugin::parseP4AnnotateOutput(DVcsJob *job)
         }
         globalCommits.insert(item.revision().revisionValue().toLongLong(), item);
     }
+
     VcsAnnotationLine* annotation;
     QStringList lines = job->output().split('\n');
 
@@ -640,6 +641,7 @@ void PerforcePlugin::parseP4AnnotateOutput(DVcsJob *job)
         results += qVariantFromValue(*annotation);
         ++lineNumber;
     }
+    
     job->setResults(results);
 }
 
