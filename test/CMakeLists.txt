@@ -1,6 +1,6 @@
-set( perforceplugintest_SRCS
-     perforceplugintest.cpp
-     ../perforceplugin.cpp
+set(perforceplugintest_SRCS
+    test_perforce.cpp
+    ../perforceplugin.cpp
 )
 include_directories(../)
 

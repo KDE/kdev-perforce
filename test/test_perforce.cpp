@@ -19,12 +19,9 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
  ***************************************************************************/
 
-#include "perforceplugintest.h"
-
+#include "test_perforce.h"
 
 #include <QtTest/QtTest>
-
-//#include <qtest_kde.h>
 
 #include <tests/autotestshell.h>
 #include <tests/testcore.h>
