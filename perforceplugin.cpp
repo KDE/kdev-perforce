@@ -319,8 +319,6 @@ KDevelop::VcsJob* PerforcePlugin::diff(const QUrl& fileOrDirectory, const KDevel
     default:
         break;
     }
-//     kDebug() << "########### srcRevision Is: " << srcRevision.prettyValue();
-//     kDebug() << "########### dstRevision Is: " << dstRevision.prettyValue();
 
 
     connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4DiffOutput(KDevelop::DVcsJob*)));
@@ -430,7 +428,6 @@ KDevelop::ContextMenuExtension PerforcePlugin::contextMenuExtension(KDevelop::Co
             break;
         }
     }
-    //kDebug() << "version controlled?" << hasVersionControlledEntries;
 
     if (!hasVersionControlledEntries)
         return IPlugin::contextMenuExtension(context);
@@ -461,11 +458,11 @@ void PerforcePlugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile
 {
     KProcess* jobproc = job->process();
     //QStringList beforeEnv = jobproc->environment();
-    //kDebug() << "Before setting the environment : " << beforeEnv;
+    //qWarning() << "Before setting the environment : " << beforeEnv;
     jobproc->setEnv("P4CONFIG", m_perforceConfigName);
     jobproc->setEnv("PWD", curFile.absolutePath());
     //QStringList afterEnv = jobproc->environment();
-    //kDebug() << "After setting the environment : " << afterEnv;
+    //qWarning() << "After setting the environment : " << afterEnv;
 }
 
 QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outputLines)
@@ -514,9 +511,6 @@ QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outp
 void PerforcePlugin::parseP4StatusOutput(DVcsJob* job)
 {
     QStringList outputLines = job->output().split('\n', QString::SkipEmptyParts);
-    //kDebug() << "Perforce returned: " << job->output();
-
-    //KUrl fileUrl = job->directory().absolutePath();
     QVariantList statuses;
     QList<QUrl> processedFiles;
 
@@ -527,7 +521,6 @@ void PerforcePlugin::parseP4StatusOutput(DVcsJob* job)
         int idx(line.indexOf(ACTION_STR));
         if (idx != -1) {
             QString curr = line.right(line.size() - ACTION_STR.size());
-            //kDebug() << "PARSED FROM P4 FSTAT JOB " << curr;
 
             if (curr == "edit") {
                 status.setState(VcsStatusInfo::ItemModified);
@@ -542,7 +535,6 @@ void PerforcePlugin::parseP4StatusOutput(DVcsJob* job)
         if (idx != -1) {
             QUrl fileUrl = QUrl::fromLocalFile(line.right(line.size() - CLIENT_FILE_STR.size()));
 
-            //kDebug() << "PARSED URL FROM P4 FSTAT JOB " << fileUrl.url();
             status.setUrl(fileUrl);
         }
     }
