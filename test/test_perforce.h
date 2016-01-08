@@ -47,6 +47,7 @@ private slots:
     void testUpdateFile();
     void testUpdateDir();
     void testCommit();
+    void testDiff();
 private:
     PerforcePlugin* m_plugin;
     KDevelop::TestCore* m_core;

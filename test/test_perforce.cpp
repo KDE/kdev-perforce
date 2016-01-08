@@ -174,5 +174,16 @@ void PerforcePluginTest::testCommit()
     VERIFYJOB(j);
 }
 
+void PerforcePluginTest::testDiff()
+{
+    KDevelop::VcsRevision srcRevision;
+    srcRevision.setRevisionValue(QVariant(1), KDevelop::VcsRevision::GlobalNumber);
+    KDevelop::VcsRevision dstRevision;
+    dstRevision.setRevisionValue(QVariant(2), KDevelop::VcsRevision::GlobalNumber);
+     
+    KDevelop::VcsJob* j = m_plugin->diff( QUrl::fromLocalFile(perforceTestBaseDir + perforceTest_FileName), srcRevision, dstRevision, KDevelop::VcsDiff::Type::DiffUnified );
+    VERIFYJOB(j);
+}
+
 
 QTEST_MAIN(PerforcePluginTest)
