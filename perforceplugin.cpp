@@ -58,18 +58,24 @@ const QString LOGENTRY_START("... #");
 
 QString toRevisionName(const KDevelop::VcsRevision& rev, QString currentRevision=QString())
 {
+    bool *ok(new bool());
+    int previous = currentRevision.toInt(ok);
+    previous--;
+    QString tmp;
     switch(rev.revisionType()) {
         case VcsRevision::Special:
             switch(rev.revisionValue().value<VcsRevision::RevisionSpecialType>()) {
                 case VcsRevision::Head:
                     return QStringLiteral("#head");
                 case VcsRevision::Base:
-                    return QString();
+                    return QStringLiteral("#have");
                 case VcsRevision::Working:
                     return QStringLiteral("#have");
                 case VcsRevision::Previous:
                     Q_ASSERT(!currentRevision.isEmpty());
-                    Q_ASSERT(false && "Needs to be implemented");
+                    tmp.setNum(previous);
+                    tmp.prepend("#");
+                    return tmp;
                 case VcsRevision::Start:
                     return QString();
                 case VcsRevision::UserSpecialType: //Not used
@@ -77,7 +83,9 @@ QString toRevisionName(const KDevelop::VcsRevision& rev, QString currentRevision
             }
             break;
         case VcsRevision::GlobalNumber:
-            return rev.revisionValue().toString();
+            tmp.append("#");
+            tmp.append(rev.revisionValue().toString());
+            return tmp;
         case VcsRevision::Date:
         case VcsRevision::FileNumber:
         case VcsRevision::Invalid:
@@ -293,42 +301,7 @@ KDevelop::VcsJob* PerforcePlugin::diff(const QUrl& fileOrDirectory, const KDevel
     QFileInfo curFile(fileOrDirectory.toLocalFile());
     QString depotSrcFileName = getRepositoryName(curFile);
     QString depotDstFileName = depotSrcFileName;
-    switch (srcRevision.revisionType()) {
-    case VcsRevision::Special:
-        switch (srcRevision.revisionValue().value<VcsRevision::RevisionSpecialType>()) {
-        case VcsRevision::Head:
-            depotSrcFileName.append("#head");
-            break;
-        case VcsRevision::Base:
-            depotSrcFileName.append("#have");
-            break;
-        case VcsRevision::Previous: {
-            bool *ok(new bool());
-            int previous = dstRevision.prettyValue().toInt(ok);
-            previous--;
-            QString tmp;
-            tmp.setNum(previous);
-            depotSrcFileName.append("#");
-            depotSrcFileName.append(tmp);
-        }
-        break;
-        case VcsRevision::Working:
-        case VcsRevision::Start:
-        case VcsRevision::UserSpecialType:
-            break;
-        }
-        break;
-    case VcsRevision::FileNumber:
-    case VcsRevision::GlobalNumber:
-        depotSrcFileName.append("#");
-        depotSrcFileName.append(srcRevision.prettyValue());
-        break;
-    case VcsRevision::Date:
-    case VcsRevision::Invalid:
-    case VcsRevision::UserSpecialType:
-        break;
-
-    }
+    depotSrcFileName.append(toRevisionName(srcRevision, dstRevision.prettyValue())); // dstRevision acutally contains the number that we want to take previous of
 
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
@@ -353,6 +326,7 @@ KDevelop::VcsJob* PerforcePlugin::diff(const QUrl& fileOrDirectory, const KDevel
         break;
     }
 
+    qWarning() << "Issuing the following command to p4: " << job->dvcsCommand();
 
     connect(job, &DVcsJob::readyForParsing, this, &PerforcePlugin::parseP4DiffOutput);
     return job;
@@ -371,7 +345,6 @@ KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop:
         *job << QStringLiteral("-m %1").arg(limit);
     QString revStr = toRevisionName(rev, QString());
     if(!revStr.isEmpty()) {
-        localLocationAndRevStr.append("#");
         localLocationAndRevStr.append(revStr);
     }
 
