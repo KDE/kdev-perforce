@@ -55,6 +55,39 @@ const QString ACTION_STR("... action ");
 const QString CLIENT_FILE_STR("... clientFile ");
 const QString DEPOT_FILE_STR("... depotFile ");
 const QString LOGENTRY_START("... #");
+
+QString toRevisionName(const KDevelop::VcsRevision& rev, QString currentRevision=QString())
+{
+    switch(rev.revisionType()) {
+        case VcsRevision::Special:
+            switch(rev.revisionValue().value<VcsRevision::RevisionSpecialType>()) {
+                case VcsRevision::Head:
+                    return QStringLiteral("#head");
+                case VcsRevision::Base:
+                    return QString();
+                case VcsRevision::Working:
+                    return QStringLiteral("#have");
+                case VcsRevision::Previous:
+                    Q_ASSERT(!currentRevision.isEmpty());
+                    Q_ASSERT(false && "Needs to be implemented");
+                case VcsRevision::Start:
+                    return QString();
+                case VcsRevision::UserSpecialType: //Not used
+                    Q_ASSERT(false && "i don't know how to do that");
+            }
+            break;
+        case VcsRevision::GlobalNumber:
+            return rev.revisionValue().toString();
+        case VcsRevision::Date:
+        case VcsRevision::FileNumber:
+        case VcsRevision::Invalid:
+        case VcsRevision::UserSpecialType:
+            Q_ASSERT(false);
+    }
+    return QString();
+}
+
+
 }
 
 Q_LOGGING_CATEGORY(PLUGIN_PERFORCE, "kdevplatform.plugins.perforce")
@@ -325,15 +358,27 @@ KDevelop::VcsJob* PerforcePlugin::diff(const QUrl& fileOrDirectory, const KDevel
     return job;
 }
 
-KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop::VcsRevision& /*rev*/, long unsigned int /*limit*/)
+KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop::VcsRevision& rev, long unsigned int limit)
 {
     QFileInfo curFile(localLocation.toLocalFile());
-    DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
-    setEnvironmentForJob(job, curFile);
-    *job << m_perforceExecutable << "filelog" << "-lit" << localLocation;
+    QString localLocationAndRevStr = localLocation.toLocalFile(); 
+    QScopedPointer<DVcsJob> job(new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Silent));
+    setEnvironmentForJob(job.data(), curFile);
+    job->setType(VcsJob::UserType);
+    *job << m_perforceExecutable << "filelog" << "-lit";
+    if(limit > 0)
+        *job << QStringLiteral("-m %1").arg(limit);
+    QString revStr = toRevisionName(rev, QString());
+    if(!revStr.isEmpty()) {
+        localLocationAndRevStr.append("#");
+        localLocationAndRevStr.append(revStr);
+    }
 
-    connect(job, &DVcsJob::readyForParsing, this, &PerforcePlugin::parseP4LogOutput);
-    return job;
+    *job << localLocationAndRevStr;
+    qWarning() << "Issuing the following command to p4: " << job->dvcsCommand();
+
+    connect(job.data(), &DVcsJob::readyForParsing, this, &PerforcePlugin::parseP4LogOutput);
+    return job.take();
 }
 
 KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop::VcsRevision& /*rev*/, const KDevelop::VcsRevision& /*limit*/)
