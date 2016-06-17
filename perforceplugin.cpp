@@ -51,11 +51,6 @@ using namespace KDevelop;
 
 namespace
 {
-const QString ACTION_STR("... action ");
-const QString CLIENT_FILE_STR("... clientFile ");
-const QString DEPOT_FILE_STR("... depotFile ");
-const QString LOGENTRY_START("... #");
-
 QString toRevisionName(const KDevelop::VcsRevision& rev, QString currentRevision=QString())
 {
     bool *ok(new bool());
@@ -120,6 +115,7 @@ PerforcePlugin::PerforcePlugin(QObject* parent, const QVariantList&):
         m_perforceConfigName = tmp;
     }
     m_hasError = false;
+    qCDebug(PLUGIN_PERFORCE) << "The value of P4CONFIG is : " << tmp;
 
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::IBasicVersionControl)
     KDEV_USE_EXTENSION_INTERFACE(KDevelop::ICentralizedVersionControl)
@@ -183,6 +179,7 @@ bool PerforcePlugin::parseP4fstat(const QFileInfo& curFile, OutputJob::OutputJob
 
 QString PerforcePlugin::getRepositoryName(const QFileInfo& curFile)
 {
+    static const QString DEPOT_FILE_STR("... depotFile ");
     QString ret;
     QScopedPointer<DVcsJob> job(p4fstatJob(curFile, KDevelop::OutputJob::Silent));
     if (job->exec() && job->status() == KDevelop::VcsJob::JobSucceeded) {
@@ -479,6 +476,7 @@ void PerforcePlugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile
 
 QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outputLines)
 {
+    static const QString LOGENTRY_START("... #");
     QList<QVariant> commits;
     VcsEvent item;
     QString commitMessage;
@@ -501,7 +499,7 @@ QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outp
             QString author(line.section(' ', 9, 9));
             int indexofAt = author.indexOf('@');
             author.remove(indexofAt, author.size()); // Only keep the username itself
-                VcsRevision rev;
+            VcsRevision rev;
             //rev.setRevisionValue(localChangeNumber, KDevelop::VcsRevision::FileNumber);
             rev.setRevisionValue(changeNumber, KDevelop::VcsRevision::GlobalNumber);
             item.setRevision(rev);
@@ -525,6 +523,9 @@ void PerforcePlugin::parseP4StatusOutput(DVcsJob* job)
     QStringList outputLines = job->output().split('\n', QString::SkipEmptyParts);
     QVariantList statuses;
     QList<QUrl> processedFiles;
+    static const QString ACTION_STR("... action ");
+    static const QString CLIENT_FILE_STR("... clientFile ");
+
 
 
     VcsStatusInfo status;
