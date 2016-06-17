@@ -326,8 +326,6 @@ KDevelop::VcsJob* PerforcePlugin::diff(const QUrl& fileOrDirectory, const KDevel
         break;
     }
 
-    qWarning() << "Issuing the following command to p4: " << job->dvcsCommand();
-
     connect(job, &DVcsJob::readyForParsing, this, &PerforcePlugin::parseP4DiffOutput);
     return job;
 }
@@ -349,7 +347,6 @@ KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop:
     }
 
     *job << localLocationAndRevStr;
-    qWarning() << "Issuing the following command to p4: " << job->dvcsCommand();
 
     connect(job, &DVcsJob::readyForParsing, this, &PerforcePlugin::parseP4LogOutput);
     return job;
@@ -476,12 +473,8 @@ void PerforcePlugin::ctxEdit()
 void PerforcePlugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile)
 {
     KProcess* jobproc = job->process();
-    //QStringList beforeEnv = jobproc->environment();
-    //qWarning() << "Before setting the environment : " << beforeEnv;
     jobproc->setEnv("P4CONFIG", m_perforceConfigName);
     jobproc->setEnv("PWD", curFile.absolutePath());
-    //QStringList afterEnv = jobproc->environment();
-    //qWarning() << "After setting the environment : " << afterEnv;
 }
 
 QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outputLines)
@@ -508,7 +501,7 @@ QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outp
             QString author(line.section(' ', 9, 9));
             int indexofAt = author.indexOf('@');
             author.remove(indexofAt, author.size()); // Only keep the username itself
-            VcsRevision rev;
+                VcsRevision rev;
             //rev.setRevisionValue(localChangeNumber, KDevelop::VcsRevision::FileNumber);
             rev.setRevisionValue(changeNumber, KDevelop::VcsRevision::GlobalNumber);
             item.setRevision(rev);
@@ -596,7 +589,6 @@ void PerforcePlugin::parseP4AnnotateOutput(DVcsJob *job)
     QFileInfo curFile(localLocation);
     setEnvironmentForJob(logJob.data(), curFile);
     *logJob << m_perforceExecutable << "filelog" << "-lit" << localLocation;
-    //qWarning() << "Issuing the following command to p4: " << logJob->dvcsCommand();
 
     QList<QVariant> commits;
     if (logJob->exec() && logJob->status() == KDevelop::VcsJob::JobSucceeded) {
