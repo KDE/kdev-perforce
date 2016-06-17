@@ -362,8 +362,9 @@ KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop:
 {
     QFileInfo curFile(localLocation.toLocalFile());
     QString localLocationAndRevStr = localLocation.toLocalFile(); 
-    QScopedPointer<DVcsJob> job(new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Silent));
-    setEnvironmentForJob(job.data(), curFile);
+    
+    DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Silent);
+    setEnvironmentForJob(job, curFile);
     job->setType(VcsJob::UserType);
     *job << m_perforceExecutable << "filelog" << "-lit";
     if(limit > 0)
@@ -377,8 +378,8 @@ KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop:
     *job << localLocationAndRevStr;
     qWarning() << "Issuing the following command to p4: " << job->dvcsCommand();
 
-    connect(job.data(), &DVcsJob::readyForParsing, this, &PerforcePlugin::parseP4LogOutput);
-    return job.take();
+    connect(job, &DVcsJob::readyForParsing, this, &PerforcePlugin::parseP4LogOutput);
+    return job;
 }
 
 KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop::VcsRevision& /*rev*/, const KDevelop::VcsRevision& /*limit*/)
