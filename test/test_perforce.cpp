@@ -52,7 +52,7 @@ void PerforcePluginTest::init()
 {
     AutoTestShell::init({"kdevperforce"});
     m_core = new TestCore();
-    m_core->initialize(Core::NoUi);
+    m_core->initialize();
     m_plugin = new PerforcePlugin(m_core);
     /// During test we are setting the executable the plugin uses to our own stub
     m_plugin->m_perforceExecutable = P4_CLIENT_STUB_EXE;

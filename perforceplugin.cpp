@@ -202,7 +202,7 @@ KDevelop::VcsJob* PerforcePlugin::status(const QList<QUrl>& localLocations, KDev
     DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
     *job << m_perforceExecutable << "fstat" << curFile.fileName();
-    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4StatusOutput(KDevelop::DVcsJob*)));
+    connect(job, &DVcsJob::readyForParsing, this, &PerforcePlugin::parseP4StatusOutput);
 
     return job;
 }
@@ -321,7 +321,7 @@ KDevelop::VcsJob* PerforcePlugin::diff(const QUrl& fileOrDirectory, const KDevel
     }
 
 
-    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4DiffOutput(KDevelop::DVcsJob*)));
+    connect(job, &DVcsJob::readyForParsing, this, &PerforcePlugin::parseP4DiffOutput);
     return job;
 }
 
@@ -332,7 +332,7 @@ KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop:
     setEnvironmentForJob(job, curFile);
     *job << m_perforceExecutable << "filelog" << "-lit" << localLocation;
 
-    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4LogOutput(KDevelop::DVcsJob*)));
+    connect(job, &DVcsJob::readyForParsing, this, &PerforcePlugin::parseP4LogOutput);
     return job;
 }
 
@@ -348,7 +348,7 @@ KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop:
     setEnvironmentForJob(job, curFile);
     *job << m_perforceExecutable << "filelog" << "-lit" << localLocation;
 
-    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4LogOutput(KDevelop::DVcsJob*)));
+    connect(job, &DVcsJob::readyForParsing, this , &PerforcePlugin::parseP4LogOutput);
     return job;
 }
 
@@ -364,7 +364,7 @@ KDevelop::VcsJob* PerforcePlugin::annotate(const QUrl& localLocation, const KDev
     setEnvironmentForJob(job, curFile);
     *job << m_perforceExecutable << "annotate" << "-qi" << localLocation;
 
-    connect(job, SIGNAL(readyForParsing(KDevelop::DVcsJob*)), SLOT(parseP4AnnotateOutput(KDevelop::DVcsJob*)));
+    connect(job, &DVcsJob::readyForParsing, this , &PerforcePlugin::parseP4AnnotateOutput);
     return job;
 }
 
@@ -438,7 +438,7 @@ KDevelop::ContextMenuExtension PerforcePlugin::contextMenuExtension(KDevelop::Co
     perforceMenu->addSeparator();
     if (!m_edit_action) {
          m_edit_action = new QAction(i18n("Edit"), this);
-         connect(m_edit_action, SIGNAL(triggered()), this, SLOT(ctxEdit()));
+         connect(m_edit_action, &QAction::triggered, this, & PerforcePlugin::ctxEdit);
      }
      perforceMenu->addAction(m_edit_action);
 
