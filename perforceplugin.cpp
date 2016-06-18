@@ -43,8 +43,6 @@
 #include <interfaces/icore.h>
 #include <interfaces/iruncontroller.h>
 
-
-
 #include <vcs/vcspluginhelper.h>
 
 using namespace KDevelop;
@@ -90,6 +88,24 @@ QString toRevisionName(const KDevelop::VcsRevision& rev, QString currentRevision
     return QString();
 }
 
+
+VcsItemEvent::Actions actionsFromString(QString const& changeDescription)
+{
+    if(changeDescription == "add")
+        return VcsItemEvent::Added;
+    if(changeDescription == "delete")
+        return VcsItemEvent::Deleted;
+    return VcsItemEvent::Modified;
+}
+
+QDir urlDir(const QUrl& url)
+{
+    QFileInfo f(url.toLocalFile());
+    if(f.isDir())
+        return QDir(url.toLocalFile());
+    else
+        return f.absoluteDir();
+}
 
 }
 
@@ -329,22 +345,33 @@ KDevelop::VcsJob* PerforcePlugin::diff(const QUrl& fileOrDirectory, const KDevel
 
 KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop::VcsRevision& rev, long unsigned int limit)
 {
+    static QString lastSeenChangeList;
     QFileInfo curFile(localLocation.toLocalFile());
     QString localLocationAndRevStr = localLocation.toLocalFile(); 
     
-    DVcsJob* job = new DVcsJob(curFile.dir(), this, KDevelop::OutputJob::Silent);
+    DVcsJob* job = new DVcsJob(urlDir(localLocation), this, KDevelop::OutputJob::Verbose);
     setEnvironmentForJob(job, curFile);
-    job->setType(VcsJob::UserType);
     *job << m_perforceExecutable << "filelog" << "-lit";
     if(limit > 0)
         *job << QStringLiteral("-m %1").arg(limit);
+    
+    if (curFile.isDir()) {
+        localLocationAndRevStr.append("/...");
+    } 
     QString revStr = toRevisionName(rev, QString());
     if(!revStr.isEmpty()) {
-        localLocationAndRevStr.append(revStr);
+        // This is not too nice, but perforce argument for restricting output from filelog does not Work :-(
+        // So putting this in so we do not end up in infinite loop calling log,
+        if(revStr == lastSeenChangeList) {
+            localLocationAndRevStr.append("#none");
+            lastSeenChangeList.clear();
+        } else { 
+            localLocationAndRevStr.append(revStr);
+            lastSeenChangeList = revStr;
+        }
     }
-
     *job << localLocationAndRevStr;
-
+    qWarning() << "Issuing the following command to p4: " << job->dvcsCommand();
     connect(job, &DVcsJob::readyForParsing, this, &PerforcePlugin::parseP4LogOutput);
     return job;
 }
@@ -468,52 +495,67 @@ void PerforcePlugin::ctxEdit()
 }
 
 void PerforcePlugin::setEnvironmentForJob(DVcsJob* job, const QFileInfo& curFile)
-{
+{    
     KProcess* jobproc = job->process();
     jobproc->setEnv("P4CONFIG", m_perforceConfigName);
-    jobproc->setEnv("PWD", curFile.absolutePath());
+    if (curFile.isDir()) {
+        jobproc->setEnv("PWD", curFile.filePath());
+        qWarning() << "Setting the environment for the dir to: " << curFile.filePath(); 
+    } else {
+        jobproc->setEnv("PWD", curFile.absolutePath());        
+    }
 }
 
 QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outputLines)
 {
     static const QString LOGENTRY_START("... #");
+    static const QString DEPOTMESSAGE_START("... .");
+    QMap<int, VcsEvent> changes;
     QList<QVariant> commits;
-    VcsEvent item;
-    QString commitMessage;
-    bool foundAChangelist(false);
-    /// I'm pretty sure this could be done more elegant.
+    QString currentFileName;
+    QString changeNumberStr, author,changeDescription, commitMessage;
+    VcsEvent currentVcsEvent;
+    VcsItemEvent currentRepoFile;
+    VcsRevision rev;
+    int indexofAt;
+    int changeNumber = 0;
+    
+    qWarning() << "Got folloiwng outputlines: " << outputLines; 
+    
     foreach(const QString & line, outputLines) {
-        int idx(line.indexOf(LOGENTRY_START));
-        if (idx != -1) {
-            if (!foundAChangelist) {
-                foundAChangelist = true;
-            } else {
-                item.setMessage(commitMessage.trimmed());
-                commits.append(QVariant::fromValue(item));
-                commitMessage.clear();
-            }
+        if (!line.startsWith(LOGENTRY_START) && !line.startsWith(DEPOTMESSAGE_START)  && !line.startsWith('\t')) {
+            currentFileName = line;
+        }
+        if(line.indexOf(LOGENTRY_START) != -1)
+        {
             // expecting the Logentry line to be of the form:
             //... #5 change 10 edit on 2010/12/06 12:07:31 by mvo@testbed (text)
-            QString changeNumber(line.section(' ', 3, 3 )); // We use global change number
-
-            QString author(line.section(' ', 9, 9));
-            int indexofAt = author.indexOf('@');
+            changeNumberStr = line.section(' ', 3, 3 ); // We use global change number
+            changeNumber = changeNumberStr.toInt();
+            author = line.section(' ', 9, 9);
+            changeDescription = line.section(' ' , 4, 4 );
+            indexofAt = author.indexOf('@');
             author.remove(indexofAt, author.size()); // Only keep the username itself
-            VcsRevision rev;
-            //rev.setRevisionValue(localChangeNumber, KDevelop::VcsRevision::FileNumber);
-            rev.setRevisionValue(changeNumber, KDevelop::VcsRevision::GlobalNumber);
-            item.setRevision(rev);
-            item.setAuthor(author);
-            item.setDate(QDateTime::fromString(line.section(' ', 6, 7), "yyyy/MM/dd hh:mm:ss"));
-        } else {
-            if (foundAChangelist)
-                commitMessage += line + '\n';
+            rev.setRevisionValue(changeNumberStr, KDevelop::VcsRevision::GlobalNumber);
+            
+            changes[changeNumber].setRevision(rev);
+            changes[changeNumber].setAuthor(author);
+            changes[changeNumber].setDate(QDateTime::fromString(line.section(' ', 6, 7), "yyyy/MM/dd hh:mm:ss"));
+            currentRepoFile.setRepositoryLocation(currentFileName);
+            currentRepoFile.setActions( actionsFromString(changeDescription) );
+            changes[changeNumber].addItem(currentRepoFile);
+            commitMessage.clear(); // We have a new entry, clear message
         }
-
+        if (line.startsWith('\t') || line.startsWith(DEPOTMESSAGE_START)) {
+            commitMessage += line.trimmed() + '\n';
+            changes[changeNumber].setMessage(commitMessage);
+        }       
+        
     }
-    item.setMessage(commitMessage);
-    commits.append(QVariant::fromValue(item));
-
+    
+    for(auto item : changes) {
+        commits.prepend(QVariant::fromValue(item));
+    }
     return commits;
 }
 
