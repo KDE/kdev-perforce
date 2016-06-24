@@ -371,7 +371,7 @@ KDevelop::VcsJob* PerforcePlugin::log(const QUrl& localLocation, const KDevelop:
         }
     }
     *job << localLocationAndRevStr;
-    qWarning() << "Issuing the following command to p4: " << job->dvcsCommand();
+    qCDebug(PLUGIN_PERFORCE) << "Issuing the following command to p4: " << job->dvcsCommand();
     connect(job, &DVcsJob::readyForParsing, this, &PerforcePlugin::parseP4LogOutput);
     return job;
 }
@@ -518,8 +518,6 @@ QList<QVariant> PerforcePlugin::getQvariantFromLogOutput(QStringList const& outp
     VcsRevision rev;
     int indexofAt;
     int changeNumber = 0;
-    
-    qWarning() << "Got folloiwng outputlines: " << outputLines; 
     
     foreach(const QString & line, outputLines) {
         if (!line.startsWith(LOGENTRY_START) && !line.startsWith(DEPOTMESSAGE_START)  && !line.startsWith('\t')) {
