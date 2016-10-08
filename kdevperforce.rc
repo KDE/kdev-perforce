@@ -1,9 +1,0 @@
-<!DOCTYPE kpartgui>
-<kpartgui name="kdevperforce" version="1">
-<MenuBar>
-  <Menu name="edit" >
-    <text context="@title:menu">Edit</text>
-    <Action name="perforce_edit" group="edit_formatting"/>
-  </Menu>
-</MenuBar>
-</kpartgui> 
